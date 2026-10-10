@@ -1,0 +1,116 @@
+*,
+*:before,
+*:after {
+	box-sizing: inherit;
+	font-family: inherit;
+}
+
+main {
+	flex: 2;
+}
+
+.layout {
+	display: flex;
+}
+
+#content {
+	margin: 3rem auto;
+	max-width: 80rem;
+	padding: 30px 15px 30px 6rem;
+	/* This fixes the footer issue; 6rem is padding size, 4rem is footer height) */
+	min-height: calc(100vh - 6rem - 4rem);
+}
+
+img:not(.noImgStyle) {
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	background-color: var(--darkest3);
+	border: 2px var(--darkest4) solid;
+	border-radius: 0.5rem;
+	box-shadow: 1px 1px 6px var(--darkest1);
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	color: var(--lightest2);
+	font-family: var(--primaryFont);
+	background: var(--darkest1);
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+}
+
+.gridLayout {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.gridItem {
+	flex: 32%;
+}
+
+@media (min-width: 850px) {
+	.gridLayout a:not(.coverCard a) {
+		display: flex;
+		flex: 32%;
+		text-decoration: none;
+	}
+}
+@media (max-width: 850px) {
+	.gridLayout a {
+		width: 100%;
+	}
+}
+
+@media (max-width: 700px) {
+	.gridItem {
+		flex: 100%;
+	}
+}
+
+.section a {
+	width: 100%;
+}
+.section h2 {
+	margin-bottom: 0;
+}
+
+/* Styles applied only on larger screens */
+@media (min-width: 1000px) {
+	.section {
+		display: flex;
+		flex-direction: revert;
+		align-items: center;
+		gap: 1rem;
+	}
+	.section.right {
+		flex-direction: row-reverse;
+	}
+	.section h2 {
+		font-size: 3rem;
+	}
+	.section a {
+		width: 15rem;
+	}
+	.section.right h2 {
+		text-align: right;
+	}
+}
+
+.section.right {
+	background: #282d37;
+	padding: 1rem 2rem;
+	border-radius: 0.1rem;
+}
+
+/* Mobile tap highlight */
+html {
+	-webkit-tap-highlight-color: rgba(128, 128, 128, 0.5);
+}
+
+.antialised {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}

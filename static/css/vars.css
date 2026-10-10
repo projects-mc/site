@@ -1,0 +1,31 @@
+:root {
+	/* Polar Night colors */
+	--darkest1: #2e3440;
+	--darkest2: #3b4252;
+	--darkest3: #434c5e;
+	--darkest4: #4c566a;
+
+	/* Snow Storm colors */
+	--lightest1: #eceff4;
+	--lightest2: #e5e9f0;
+	--lightest3: #d8dee9;
+
+	/* Nord Aurora misc colors */
+	--red: #bf616a;
+	--orange: #d08770;
+	--yellow: #ebcb8b;
+	--green: #a3be8c;
+	--purple: #b48ead;
+
+	/* Frost */
+	--blue1: #b5d2d9; /* Permafrost Blue */
+	--blue2: #81a1c1;
+	--blue3: #5e81ac;
+
+	/* Fonts */
+	--headerFont: 'Hammersmith One', Roboto, Helvetica, Arial, sans-serif;
+	--primaryFont: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+
+	--ease: cubic-bezier(0, 0.6, 0.3, 1);
+}
