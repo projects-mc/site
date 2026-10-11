@@ -28,7 +28,25 @@
 		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
 	--ease: cubic-bezier(0, 0.6, 0.3, 1);
+	--navSpeed: 0.15s; /* every sidebar open/close transition */
+	/* --ease played backwards, so closing the sidebar retraces opening */
+	--easeReverse: cubic-bezier(0.7, 0, 1, 0.4);
+	/* Sidebar transitions use the curve of the state they head to: --ease opening, --easeReverse closing */
+	--navEase: var(--easeReverse);
+
+	/* Instance box rows, shared by the open box and the closed summary so their lines sit at the same heights:
+	   name / players, stats / memory, running state / status light, Update button / update icon */
+	--instanceRows: 36px 30px 30px;
+	--instanceUpdateRow: 40px;
 
 	/* Pixel art scale: every pixel art image and Monocraft (9px em) render at this multiple */
 	--scale: 2;
+
+	/* Clip shape that knocks one art pixel off each corner, for pixel art boxes */
+	--pc: calc(var(--scale) * 1px);
+	--pixelCorners: polygon(
+		var(--pc) 0, calc(100% - var(--pc)) 0, calc(100% - var(--pc)) var(--pc), 100% var(--pc),
+		100% calc(100% - var(--pc)), calc(100% - var(--pc)) calc(100% - var(--pc)), calc(100% - var(--pc)) 100%, var(--pc) 100%,
+		var(--pc) calc(100% - var(--pc)), 0 calc(100% - var(--pc)), 0 var(--pc), var(--pc) var(--pc)
+	);
 }

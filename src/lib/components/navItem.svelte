@@ -4,7 +4,6 @@
 		href,
 		icon,
 		external,
-		nolink,
 		children
 	} = $props();
 
@@ -13,9 +12,8 @@
 
 <li>
 	<a
-		href={nolink ? '' : href}
+		{href}
 		class:active={isCurrentPage}
-		class:nolink={nolink}
 		aria-current={isCurrentPage ? 'page' : false}
 		target={external ? "_blank" : ''}
 		rel={external ? "noopener noreferrer" : ''}

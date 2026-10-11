@@ -1,0 +1,43 @@
+/* Parsed server log lines, shared by the console and the log viewer */
+/* Wrapped lines hang under the message instead of under the timestamp */
+.logLine {
+	padding-left: 32px;
+	text-indent: -32px;
+	overflow-wrap: anywhere;
+}
+.logLine.continuation {
+	color: var(--lightest3);
+}
+
+.logTime {
+	color: var(--darkest4);
+}
+
+.logLevel {
+	color: var(--blue2);
+}
+.logLevel.warn {
+	color: var(--yellow);
+}
+.logLevel.error,
+.logLevel.severe {
+	color: var(--red);
+}
+
+.logSource {
+	color: var(--purple);
+}
+
+.logMessage {
+	color: var(--lightest1);
+}
+
+/* Find matches; the one being looked at is brighter */
+.logLines mark {
+	background-color: var(--darkest4);
+	color: var(--lightest1);
+}
+.logLines mark.current {
+	background-color: var(--yellow);
+	color: var(--darkest1);
+}

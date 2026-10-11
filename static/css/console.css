@@ -1,0 +1,42 @@
+/* Server console: pixel bordered log with a command line at the bottom */
+.console {
+	display: flex;
+	flex-direction: column;
+	height: 60vh;
+	--pixelBorder: var(--lightest3);
+	background-color: var(--darkest1);
+}
+
+.consoleOutput {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px 12px;
+	font-size: 18px;
+	line-height: 27px;
+}
+
+
+.consoleInput {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 12px;
+	border-top: var(--pc) solid var(--lightest3);
+	color: var(--blue2);
+}
+.consoleInput input {
+	flex: 1;
+	padding: 0;
+	border: 0;
+	box-shadow: none;
+	background: none;
+	color: var(--lightest1);
+	font: inherit;
+}
+
+/* Prompt icon is decoration: no selecting, dragging or clicking it */
+.consolePrompt {
+	user-select: none;
+	-webkit-user-drag: none;
+	pointer-events: none;
+}

@@ -58,7 +58,6 @@ h5,
 h6,
 span {
 	overflow-wrap: break-word;
-	color: var(--lightest2);
 	overflow: visible;
 }
 

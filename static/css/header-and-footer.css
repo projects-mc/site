@@ -6,6 +6,7 @@ nav {
 
 :where(nav, footer) a {
 	text-decoration: none;
+	color: inherit;
 
 	&.active {
 		font-weight: bold;
@@ -32,27 +33,85 @@ nav {
 	width: 80px;
 	min-width: 80px;
 	transition:
-		width 0.1s var(--ease),
-		min-width 0.1s var(--ease),
-		padding 0.1s var(--ease);
+		width var(--navSpeed) var(--navEase),
+		min-width var(--navSpeed) var(--navEase),
+		padding var(--navSpeed) var(--navEase);
 	box-shadow: 10px 0 20px 0px var(--darkest1);
 	z-index: 3;
 	overflow-x: clip; /* hides the part of sidebar-top.png past the collapsed width */
 }
 
-#logo {
+/* Pin, logo and player head row. The pin and player head only show while the sidebar is open */
+#sidebarTop {
 	display: flex;
 	gap: 8px;
-	align-items: center;
+	align-items: flex-start;
 }
 
+/* Player head (account dropdown) carries a dropdown arrow tucked below its bottom right corner */
 #playerhead {
-	display: none;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 2px;
+	text-decoration: none;
 }
 
-nav:hover #playerhead {
-	display: block;
+/* Nudged one art pixel down and right. Pixel art is zoomed, so 1px here is one art pixel */
+.dropdownArrow {
+	position: relative;
+	top: 1px;
+	left: 1px;
+}
+
+/* The pin grows in from nothing as the sidebar opens (and shrinks back as it closes), pushing the logo over.
+   Hidden by size and transparency, not display: none, so Tab can still reach it and open the sidebar */
+#pin {
+	display: flex;
+	width: 0;
+	margin: 0 -8px 0 0; /* cancels the row gap while it has no width */
+	overflow: hidden;
+	opacity: 0;
+	pointer-events: none;
+	padding: 0;
+	min-width: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+	clip-path: none;
+	transition:
+		width var(--navSpeed) var(--navEase),
+		margin var(--navSpeed) var(--navEase),
+		opacity var(--navSpeed) var(--navEase);
+}
+
+/* Off to the right of the closed sidebar, where it's clipped; fades in as the sidebar opens */
+#playerhead {
 	margin-left: auto;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--navSpeed) var(--navEase);
+}
+
+nav:is(:hover, :has(:focus-visible), .pinned) #pin {
+	width: 32px;
+	margin-right: 0;
+	opacity: 1;
+	pointer-events: auto;
+}
+
+nav:is(:hover, :has(:focus-visible), .pinned) #playerhead {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* Pinned sidebar pushes the page over instead of overlapping it */
+main #content {
+	transition: padding-left var(--navSpeed) var(--navEase);
+}
+nav.pinned ~ main #content {
+	padding-left: 208px;
 }
 
 .navItems {
@@ -66,7 +125,7 @@ nav:hover #playerhead {
 	align-content: space-between;
 }
 
-nav:hover .navItems {
+nav:is(:hover, :has(:focus-visible), .pinned) .navItems {
 	transform: translateX(0);
 	pointer-events: unset;
 	visibility: unset;
@@ -82,66 +141,24 @@ nav:hover .navItems {
 	padding: 0;
 	top: -5px;
 	transition:
-		opacity 0.05s var(--ease),
-		left 0.1s var(--ease);
+		opacity var(--navSpeed) var(--navEase),
+		left var(--navSpeed) var(--navEase);
 }
 
-nav:hover .external {
+nav:is(:hover, :has(:focus-visible), .pinned) .external {
 	opacity: 1;
 	left: 0;
-}
-
-#expandbtn,
-#unexpandbtn {
-	visibility: visible;
-	position: absolute;
-	left: 80px;
-	top: 16px;
-	width: 50px;
-	transition:
-		left 0.05s var(--ease),
-		transform 0.05s var(--ease),
-		visibility 0.1s;
-	background-color: var(--darkest2);
-	transform: scaleX(1);
-	border: 0 solid;
-	border-radius: 0 8px 8px 0;
-	box-shadow: 0 0;
-	z-index: 16;
-}
-
-nav:hover #expandbtn,
-#unexpandbtn {
-	visibility: hidden;
-}
-nav:hover + #unexpandParent #unexpandbtn {
-	visibility: visible;
-}
-
-#unexpandbtn {
-	position: fixed;
-}
-
-nav:hover + #unexpandParent #unexpandbtn,
-nav:hover #expandbtn {
-	left: 192px;
-	transform: scaleX(-1);
-	border-radius: 8px 0 0 8px;
-}
-
-#unexpandParent {
-	position: absolute;
 }
 
 nav p {
 	opacity: 0;
 	transform: translateX(-40px);
 	transition:
-		opacity 0.1s var(--ease),
-		transform 0.1s var(--ease);
+		opacity var(--navSpeed) var(--navEase),
+		transform var(--navSpeed) var(--navEase);
 }
 
-nav:hover p {
+nav:is(:hover, :has(:focus-visible), .pinned) p {
 	opacity: 1;
 	transform: translateX(0);
 }
@@ -165,6 +182,203 @@ nav a {
 	margin-bottom: 10px;
 }
 
+/* Selected tab: white pixel box with blue text and icon */
+nav a.active,
+nav a.active p {
+	background: var(--lightest1);
+	color: var(--blue3);
+	clip-path: var(--pixelCorners);
+}
+nav a.active img {
+	filter: url(#tintActive);
+}
+
+/* Instance area. Always takes up the full box's space so the tabs below never jump. The full box shows while
+   the sidebar is open; the closed sidebar shows a compact summary in the same spot */
+#instanceArea {
+	position: relative;
+	width: 176px;
+	margin-top: 8px;
+}
+
+#instance {
+	display: grid; /* name row, then the stats */
+	grid-template-rows: 36px auto; /* name row (first of --instanceRows), then the stats */
+	background-color: var(--darkest2);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity var(--navSpeed) var(--navEase);
+}
+nav:is(:hover, :has(:focus-visible), .pinned) #instance {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.instanceCompact {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 64px;
+	height: 100%;
+	display: grid;
+	grid-template-rows: var(--instanceRows);
+	grid-auto-rows: var(--instanceUpdateRow);
+	align-items: center;
+	justify-items: start;
+	padding: 0 4px 6px;
+	background-color: var(--darkest2);
+	transition: opacity var(--navSpeed) var(--navEase);
+}
+.instanceCompact span {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+/* Two-digit memory readings shrink a little to fit the box. 16px is off Monocraft's 9px pixel grid, so it is
+   very slightly softer than the other text */
+.instanceCompact .shrunk {
+	font-size: 16px;
+}
+/* Stopped or empty server: no stats rows to line up with, so the light (and update icon) sit centred in the box */
+.instanceCompact.statusOnly {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-evenly;
+}
+.instanceCompact .centered {
+	justify-self: center;
+}
+nav:is(:hover, :has(:focus-visible), .pinned) .instanceCompact {
+	opacity: 0;
+}
+
+/* Square pixel status light: green running, red stopped */
+.statusLight {
+	width: calc(var(--pc) * 8);
+	height: calc(var(--pc) * 8);
+	background: var(--red);
+}
+.statusLight.running {
+	background: var(--green);
+}
+
+#instance button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+}
+
+/* The name row is the box's lighter header: no border of its own */
+#instance .instanceToggle {
+	justify-content: space-between;
+	height: 36px;
+	padding: 0 8px;
+	border: 0;
+	clip-path: none;
+	background: var(--darkest3);
+}
+#instance .instanceToggle:hover {
+	background: var(--darkest4);
+}
+.dropdownArrow.open {
+	scale: 1 -1;
+}
+
+/* Instance list opens in place under the name, pushing the stats down */
+/* Instance menu: floats over the stats at the box's full width, hanging off the name row (no top border).
+   Outside the box so the box's clipped corners don't cut it off */
+.instanceMenu {
+	position: absolute;
+	left: 0;
+	right: 0;
+	z-index: 5;
+	filter: drop-shadow(var(--pc) var(--pc) 0 var(--darkest1)) drop-shadow(var(--pc) var(--pc) 0 var(--darkest1));
+}
+nav:not(:hover, :has(:focus-visible), .pinned) .instanceMenu {
+	display: none; /* closing the sidebar hides it with the rest of the box */
+}
+.instanceList {
+	border: var(--pc) solid var(--darkest4);
+	border-top: 0;
+	background-color: var(--darkest1);
+	/* Pixel corners on the bottom only, with the inner corner pixel filled as on .pixelBox */
+	clip-path: polygon(
+		0 0, 100% 0, 100% calc(100% - var(--pc)), calc(100% - var(--pc)) calc(100% - var(--pc)),
+		calc(100% - var(--pc)) 100%, var(--pc) 100%, var(--pc) calc(100% - var(--pc)), 0 calc(100% - var(--pc))
+	);
+	background-image: linear-gradient(var(--darkest4), var(--darkest4)), linear-gradient(var(--darkest4), var(--darkest4));
+	background-size: var(--pc) var(--pc);
+	background-position: bottom left, bottom right;
+	background-repeat: no-repeat;
+}
+.instanceList button {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	background: none;
+	border: 0;
+	clip-path: none;
+	white-space: nowrap;
+	text-align: left;
+	padding: 2px 8px;
+}
+.instanceList button:hover {
+	background: var(--darkest3);
+}
+
+.instanceBody {
+	grid-area: 2 / 1;
+	display: flex;
+	flex-direction: column;
+	padding: 0 8px 6px;
+}
+/* Row heights match the closed summary's (--instanceRows, --instanceUpdateRow) so lines sit at the same heights */
+.instanceStats,
+.instanceState {
+	height: 30px;
+}
+#instance .updateButton {
+	height: var(--instanceUpdateRow);
+}
+
+.instanceStats {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.instanceStats span,
+.instanceState {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* Square status light */
+.instanceState::before {
+	content: '';
+	width: calc(var(--pc) * 3);
+	height: calc(var(--pc) * 3);
+	background: var(--red);
+}
+.instanceState {
+	color: var(--red);
+}
+.instanceState.running {
+	color: var(--green);
+}
+.instanceState.running::before {
+	background: var(--green);
+}
+
+#instance .updateButton {
+	justify-content: center;
+	color: var(--green);
+	--pixelBorder: var(--green);
+}
+
 nav:before {
 	content: url(/media/icons/sidebar-top.png);
 	zoom: var(--scale);
@@ -176,7 +390,7 @@ nav:before {
 	z-index: -1;
 }
 
-nav:hover ~ main footer {
+nav:is(:hover, :has(:focus-visible), .pinned) ~ main footer {
 	margin-left: 192px;
 }
 
@@ -187,7 +401,7 @@ footer {
 	z-index: 3;
 	position: relative;
 	margin-left: 80px;
-	transition: margin-left 0.1s var(--ease);
+	transition: margin-left var(--navSpeed) var(--navEase);
 }
 
 footer::before {
@@ -207,7 +421,7 @@ footer p, footer a {
 }
 
 /* Navigation open on hover */
-nav:hover {
+nav:is(:hover, :has(:focus-visible), .pinned) {
 	width: 192px;
 	padding: 8px;
 	min-width: 192px;
@@ -216,8 +430,8 @@ nav:hover {
 nav ul ul {
 	max-height: 0px;
 	transition:
-		max-height 0.1s var(--ease),
-		margin-bottom 0.1s var(--ease);
+		max-height var(--navSpeed) var(--navEase),
+		margin-bottom var(--navSpeed) var(--navEase);
 	overflow: hidden;
 	padding-left: 10px;
 
@@ -226,7 +440,7 @@ nav ul ul {
 	white-space: nowrap;
 }
 
-nav:hover ul ul {
+nav:is(:hover, :has(:focus-visible), .pinned) .navGroup.open ul {
 	max-height: 112px;
 	margin-bottom: 10px;
 }
@@ -237,4 +451,67 @@ nav ul ul li:last-child a {
 
 nav ul ul p {
 	transform: translateX(0) !important;
+}
+
+
+/* Section header (Settings): opens its pages rather than being one, so it reads as a dropdown, not a tab */
+nav li.navGroup {
+	display: block;
+	width: 100%;
+}
+button.navGroupToggle {
+	display: flex;
+	position: relative;
+	align-items: center;
+	gap: 5px;
+	width: 100%;
+	margin-bottom: 10px;
+	padding: 0;
+	border: 0;
+	clip-path: none;
+	background: none;
+	color: var(--lightest3);
+}
+button.navGroupToggle:hover {
+	background: none;
+	color: var(--lightest1);
+}
+/* Tucked into the bottom right corner, as on the player head, so a long label never pushes it out */
+.navGroupToggle .dropdownArrow {
+	position: absolute;
+	right: 3px;
+	bottom: 3px;
+	top: auto; /* drop the shared one-pixel nudge */
+	left: auto;
+	opacity: 0; /* only once the sidebar is open, fading with the labels */
+	transition: opacity var(--navSpeed) var(--navEase);
+}
+
+/* Opening animates with --ease; leaving this state falls back to the root's --easeReverse */
+nav:is(:hover, :has(:focus-visible), .pinned),
+nav:is(:hover, :has(:focus-visible), .pinned) ~ main {
+	--navEase: var(--ease);
+}
+
+/* Pages inside a section are marked bold; the white selected box belongs to the section header */
+nav .navGroup ul a.active,
+nav .navGroup ul a.active p {
+	background: none;
+	color: inherit;
+	clip-path: none;
+	font-weight: bold;
+}
+
+/* Section holding the current page: stays open and looks selected, like a tab */
+.navGroup.current button.navGroupToggle {
+	background: var(--lightest1);
+	color: var(--blue3);
+	clip-path: var(--pixelCorners);
+	cursor: default;
+}
+.navGroup.current .navGroupToggle img {
+	filter: url(#tintActive);
+}
+nav:is(:hover, :has(:focus-visible), .pinned) .navGroupToggle .dropdownArrow {
+	opacity: 1;
 }

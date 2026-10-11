@@ -45,3 +45,9 @@ body {
 html {
 	-webkit-tap-highlight-color: transparent;
 }
+
+/* Overscroll past the page edges shows the root's background: match the sidebar and footer.
+   Setting it on html stops body's background spreading there, so body keeps the content colour */
+html {
+	background: var(--darkest2);
+}

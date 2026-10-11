@@ -105,13 +105,14 @@ h6 {
 	line-height: 1.1;
 	font-family: var(--headerFont);
 	font-weight: lighter;
+	color: var(--blue2);
+	text-shadow: calc(1em / 9) calc(1em / 9) 0 var(--darkest1);
 }
 
 h1 {
 	font-size: 36px;
 	margin: 0 0 32px;
 	position: relative;
-	overflow: hidden;
 }
 
 h2:not(:has(span)) {
@@ -130,10 +131,6 @@ h5 {
 	font-size: 18px;
 }
 
-h1,
-h2:not(:has(span)) {
-	text-shadow: 0px 3px 16px var(--blue1);
-}
 
 a:has(> h1, h2, h3, h4) {
 	text-decoration: none !important;
@@ -146,7 +143,6 @@ a:hover h2 {
 
 a:not(.navItems ul li a):not(#logo) {
 	color: var(--lightest3);
-	text-decoration-thickness: 1px;
 	text-decoration-color: var(--lightest3);
 	text-decoration: underline;
 }
@@ -164,11 +160,18 @@ ul::marker {
 	color: var(--blue1);
 }
 
-/* Pixel underlines: one art pixel thick and offset on the pixel grid everywhere.
+/* Pixel underlines: two art pixels thick and offset on the pixel grid everywhere.
    !important because the text-decoration shorthand elsewhere resets thickness */
 a,
 a * {
-	text-decoration-thickness: calc(var(--scale) * 1px) !important;
+	text-decoration-thickness: calc(var(--scale) * 2px) !important;
 	text-underline-offset: calc(var(--scale) * 2px) !important;
 	text-decoration-skip-ink: none;
+}
+
+/* Big white [instance name] at the top of instance pages */
+h1.instanceTitle {
+	font-size: 54px;
+	color: var(--lightest1);
+	text-align: center;
 }

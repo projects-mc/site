@@ -1,0 +1,45 @@
+/* History lists (backups, logs): one pixel box row per entry, the newest marked Latest */
+.historyHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.historyList {
+	list-style: none;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.historyItem {
+	display: grid;
+	grid-template-columns: var(--historyColumns); /* set by the list from the columns it has */
+	align-items: center;
+	gap: 16px;
+	padding: 8px 12px;
+	background-color: var(--darkest2);
+}
+
+.historyItem.latest {
+	--pixelBorder: var(--blue2);
+}
+.historyItem.latest .historyLabel {
+	color: var(--blue2);
+}
+
+.historySize {
+	color: var(--lightest3);
+	text-align: right;
+}
+
+.historyActions {
+	display: flex;
+	gap: 8px;
+}
+
+.historyHeaderActions {
+	display: flex;
+	gap: 8px;
+}

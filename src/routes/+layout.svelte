@@ -31,6 +31,14 @@
 
 <!-- Data below is used on every page throughout the site -->
 
+<!-- Recolours every opaque pixel of an icon to the active tab blue -->
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+	<filter id="tintActive">
+		<feFlood flood-color="#5e81ac"/>
+		<feComposite in2="SourceAlpha" operator="in"/>
+	</filter>
+</svg>
+
 <div class="layout">
 	<Header/>
 	{#key page.url.pathname}
