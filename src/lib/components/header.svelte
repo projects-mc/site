@@ -12,20 +12,22 @@
 	<a onclick={preventDefault(focusMainContent)} id="skipToContent" href="#content">
 		Skip to content
 	</a>
-	
-	<img src="/favicon.png" alt="AmazinAxel logo" id="logoicon">
-	<a href="/" class="site-title">AmazinAxel</a>
-	<img src="/media/icons/expand.svg" alt="Expand sidebar" id="expandbtn">
+
+	<a href="/" id="logo">
+		<img src="/media/icons/playboard.png" alt="Playboard logo" class="noImgStyle">
+		<img src="/media/icons/player-placeholder.png" alt="Player head" id="playerhead" class="noImgStyle">
+	</a>
+	<!-- <img src="/media/icons/expand.svg" alt="Expand sidebar" id="expandbtn"> -->
 
 	<div class="navItems">
 		<ul>
 			{#each navItems as navitem}
 				{#if typeof navitem.subitems == 'undefined'}
-					<NavItem href={navitem.route} icon={navitem.icon}>
+					<NavItem href={navitem.route} icon={navitem.title.toLowerCase()}>
 						<p>{navitem.title}</p>
 					</NavItem>
 				{:else}
-					<NavItem href={navitem.route} icon={navitem.icon} nolink>
+					<NavItem href={navitem.route} icon={navitem.title.toLowerCase()} nolink>
 						<p>{navitem.title}</p>
 					</NavItem>
 					<ul>
@@ -38,12 +40,12 @@
 				{/if}
 			{/each}
 		</ul>
-		<ul>
+		<!-- <ul> -->
 			<!-- Bottom Navbar -->
-			<NavItem href="https://journal.amazinaxel.com" icon="journal" external><p>Journal</p></NavItem>
-		</ul>
-	</div>	
+			<!-- <NavItem href="https://example.com" icon="test" external><p>test</p></NavItem> -->
+		<!-- </ul> -->
+	</div>
 </nav>
-<div id="unexpandParent">
-	<img src="/media/icons/expand.svg" alt="Un-expand sidebar" id="unexpandbtn">
-</div>
+<!-- <div id="unexpandParent"> -->
+	<!-- <img src="/media/icons/expand.svg" alt="Un-expand sidebar" id="unexpandbtn"> -->
+<!-- </div> -->

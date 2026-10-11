@@ -21,7 +21,7 @@
 		rel={external ? "noopener noreferrer" : ''}
 	>
 		<img class="noImgStyle" 
-			src="/media/icons/{icon}.svg" 
+			src="/media/icons/{icon}.png" 
 			alt="{href} Header icon"
 		/>
 		{@render children?.()}

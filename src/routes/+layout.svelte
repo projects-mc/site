@@ -7,8 +7,7 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/state';
-	let { data, children } = $props();
-	let { date } = $derived(data);
+	let { children } = $props();
 
 	// Delays and fadeouts are glitchy atm ;(
 	const transitionIn = { duration: 150 };
@@ -39,7 +38,7 @@
 			<div id="content">
 				{@render children?.()}
 			</div>
-			<Footer date={date}/>
+			<Footer/>
 		</main>
 	{/key}
 </div>

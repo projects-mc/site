@@ -6,12 +6,13 @@ html {
 *::before,
 *::after {
 	box-sizing: inherit;
-} /* Forces box-sizing to border-box */
+	image-rendering: pixelated;
+} /* Forces box-sizing to border-box; crisp pixel art scaling */
 code,
 kbd,
 samp,
 pre {
-	font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+	font-family: 'Monocraft', 'Iosevka', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, Courier, monospace;
 	font-size: 1em;
 	overflow-x: scroll;
 }
@@ -59,4 +60,13 @@ span {
 	overflow-wrap: break-word;
 	color: var(--lightest2);
 	overflow: visible;
+}
+
+/* Pixel art renders at its native size times --scale. Don't size these in CSS; resize the source art instead */
+img[src^="/media/icons/"][src$=".png"] {
+	zoom: var(--scale);
+	width: auto;
+	flex-shrink: 0;
+	max-width: none;
+	height: auto;
 }

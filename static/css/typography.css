@@ -1,6 +1,30 @@
 body {
 	line-height: 1.5;
-	font-size: 1.125rem;
+	font-size: 18px;
+}
+
+@font-face {
+	font-family: 'Monocraft';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/monocraft-regular.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Monocraft';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(/fonts/monocraft-bold.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Monocraft';
+	font-style: italic;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/monocraft-italic.woff2) format('woff2');
 }
 
 @font-face {
@@ -23,44 +47,92 @@ body {
 		U+FFFD;
 }
 
+@font-face {
+	font-family: 'Iosevka';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/iosevka-regular.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Iosevka';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(/fonts/iosevka-bold.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Libron';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/libron-regular.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Libron';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url(/fonts/libron-bold.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Libron';
+	font-style: italic;
+	font-weight: 400;
+	font-display: swap;
+	src: url(/fonts/libron-italic.woff2) format('woff2');
+}
+
+@font-face {
+	font-family: 'Libron';
+	font-style: italic;
+	font-weight: 700;
+	font-display: swap;
+	src: url(/fonts/libron-bolditalic.woff2) format('woff2');
+}
+
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-	margin: 1rem 0 1rem;
+	margin: 16px 0 16px;
 	line-height: 1.1;
 	font-family: var(--headerFont);
 	font-weight: lighter;
 }
 
 h1 {
-	font-size: clamp(2.25rem, calc(1.8rem + 1vw), 2.5rem);
-	margin: 0 0 2rem;
+	font-size: 36px;
+	margin: 0 0 32px;
 	position: relative;
 	overflow: hidden;
 }
 
 h2:not(:has(span)) {
-	font-size: clamp(1.8rem, calc(1.8rem + 1vw), 2rem);
+	font-size: 27px;
 }
 
 h3 {
-	font-size: clamp(1.6rem, calc(1.6rem + 1vw), 2rem);
+	font-size: 27px;
 }
 
 h4 {
-	font-size: clamp(1.5rem, calc(1.5rem + 1vw), 1.8rem);
+	font-size: 27px;
 }
 
 h5 {
-	font-size: clamp(1.4rem, calc(1.4rem + 1vw), 1.4rem);
+	font-size: 18px;
 }
 
-h1:not(#hero h1),
+h1,
 h2:not(:has(span)) {
-	text-shadow: 0px 3px 1rem var(--blue1);
+	text-shadow: 0px 3px 16px var(--blue1);
 }
 
 a:has(> h1, h2, h3, h4) {
@@ -70,35 +142,9 @@ a:has(> h1, h2, h3, h4) {
 a:hover h2 {
 	text-decoration: underline;
 	text-decoration-color: var(--blue2);
-	/*text-underline-offset: 0.1em;*/
 }
 
-/* Subtext */
-span.subtext {
-	color: var(--darkest4);
-	font-size: 1.5rem;
-	bottom: 0.1rem;
-	position: relative;
-	font-family: var(--primaryFont);
-	font-weight: 500;
-}
-
-span.subtext::before {
-	content: '◆';
-	padding-right: 0.6rem;
-	bottom: 0.2rem;
-	position: relative;
-	font-size: 1rem;
-	color: var(--blue2);
-}
-
-/*a h2 {
-	underline 0.15em rgba(0, 0, 0, 1);
-	text-underline-offset: 0em;
-	transition: text-decoration-color 1s, text-underline-offset 1s, text-decoration 1s;
-}*/
-
-a:not(.navItems ul li a):not(.site-title) {
+a:not(.navItems ul li a):not(#logo) {
 	color: var(--lightest3);
 	text-decoration-thickness: 1px;
 	text-decoration-color: var(--lightest3);
@@ -107,7 +153,7 @@ a:not(.navItems ul li a):not(.site-title) {
 
 ul {
 	list-style-type: square;
-	padding-left: 1.5rem;
+	padding-left: 24px;
 }
 
 ul ul {
@@ -116,4 +162,13 @@ ul ul {
 
 ul::marker {
 	color: var(--blue1);
+}
+
+/* Pixel underlines: one art pixel thick and offset on the pixel grid everywhere.
+   !important because the text-decoration shorthand elsewhere resets thickness */
+a,
+a * {
+	text-decoration-thickness: calc(var(--scale) * 1px) !important;
+	text-underline-offset: calc(var(--scale) * 2px) !important;
+	text-decoration-skip-ink: none;
 }
