@@ -12,12 +12,12 @@ export const navItems = [
 		route: '/backups'
 	},
 	{
-		title: 'Settings',
-		route: '/settings',
+		title: 'Options',
+		route: '/options',
 		subitems: [
 			{
 				title: 'Instance',
-				route: 'options'
+				route: 'instance'
 			},
 			{
 				title: 'Development',

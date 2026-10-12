@@ -15,28 +15,63 @@
 	line-height: 27px;
 }
 
-
 .consoleInput {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	padding: 4px 12px;
+	gap: 0; /* the prompt character runs straight into the typed text */
+	padding: calc(4px + var(--pc)) calc(12px + var(--pc)); /* one extra art pixel all round */
 	border-top: var(--pc) solid var(--lightest3);
 	color: var(--blue2);
 }
-.consoleInput input {
+/* Typed commands at Monocraft's 3x size (27px): sharp, with 3px pixels, one step under the art's 4px ones */
+.consoleField {
+	--monoAdvance: calc(27px * 2 / 3); /* Monocraft characters are 2/3 of an em wide */
+	--monoPixel: calc(27px / 9); /* one pixel of the typed text: Monocraft draws an em as 9 pixels */
+	position: relative;
 	flex: 1;
+	display: flex;
+	align-items: center;
+}
+.consoleField input[type="text"] { /* outranks the global input style */
+	flex: 1;
+	margin: 0;
 	padding: 0;
+	border-radius: 0;
+	max-width: none;
 	border: 0;
 	box-shadow: none;
 	background: none;
 	color: var(--lightest1);
 	font: inherit;
+	font-size: 27px;
+	line-height: 1;
+	caret-color: transparent; /* replaced by .consoleCaret */
 }
 
-/* Prompt icon is decoration: no selecting, dragging or clicking it */
-.consolePrompt {
-	user-select: none;
-	-webkit-user-drag: none;
+/* Pixel text cursor in the typed text's own pixels: one wide, eight tall, blinking. Re-keyed on each move so it
+   restarts lit */
+.consoleCaret {
+	position: absolute;
+	top: 50%;
+	width: var(--monoPixel);
+	height: calc(var(--monoPixel) * 8);
+	translate: 0 -50%;
+	background: var(--lightest1);
 	pointer-events: none;
+	animation: caretBlink 1s steps(1) infinite;
+}
+@keyframes caretBlink {
+	50% {
+		opacity: 0;
+	}
+}
+
+/* Prompt character (/ or >) in the same font and size as the typed text, so it reads as its first character.
+   Decoration: it can't be selected or copied with the command */
+.consolePrompt {
+	font-size: 27px;
+	line-height: 1;
+	white-space: pre;
+	user-select: none;
+	color: var(--blue4);
 }

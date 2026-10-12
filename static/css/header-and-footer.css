@@ -7,10 +7,6 @@ nav {
 :where(nav, footer) a {
 	text-decoration: none;
 	color: inherit;
-
-	&.active {
-		font-weight: bold;
-	}
 }
 
 :where(nav, footer) nav ul {
@@ -30,47 +26,48 @@ nav {
 	position: fixed;
 	top: 0;
 	height: 100%;
-	width: 80px;
-	min-width: 80px;
+	width: var(--navClosed);
+	min-width: var(--navClosed);
 	transition:
 		width var(--navSpeed) var(--navEase),
 		min-width var(--navSpeed) var(--navEase),
 		padding var(--navSpeed) var(--navEase);
 	box-shadow: 10px 0 20px 0px var(--darkest1);
 	z-index: 3;
-	overflow-x: clip; /* hides the part of sidebar-top.png past the collapsed width */
+	/* Scrolls on short screens (scrollbar hidden so the width never changes); also hides what sticks out past the
+	   closed width */
+	overflow-x: hidden;
+	overflow-y: auto;
+	scrollbar-width: none;
+	display: flex;
+	flex-direction: column;
 }
 
-/* Pin, logo and player head row. The pin and player head only show while the sidebar is open */
+/* Logo and player head row. The player head only shows while the sidebar is open */
 #sidebarTop {
 	display: flex;
 	gap: 8px;
 	align-items: flex-start;
+	padding-left: 8px; /* centres the 64px logo in the closed sidebar's 80px */
 }
 
-/* Player head (account dropdown) carries a dropdown arrow tucked below its bottom right corner */
+/* Player head (account menu, later). A Minecraft face is 8x8, so it is drawn at double scale to be as big as
+   the 16x16 logo: the one sprite with chunkier pixels */
+#playerhead img {
+	zoom: calc(var(--scale) * 2);
+}
 #playerhead {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	gap: 2px;
 	text-decoration: none;
 }
 
-/* Nudged one art pixel down and right. Pixel art is zoomed, so 1px here is one art pixel */
-.dropdownArrow {
-	position: relative;
-	top: 1px;
-	left: 1px;
-}
-
-/* The pin grows in from nothing as the sidebar opens (and shrinks back as it closes), pushing the logo over.
-   Hidden by size and transparency, not display: none, so Tab can still reach it and open the sidebar */
+/* Pin: bottom right corner of the sidebar, faded in with the rest while it's open.
+   Hidden by transparency, not display: none, so Tab can still reach it and open the sidebar */
 #pin {
+	position: sticky; /* stays in the bottom corner while the sidebar scrolls */
+	align-self: flex-end;
+	bottom: 0;
 	display: flex;
-	width: 0;
-	margin: 0 -8px 0 0; /* cancels the row gap while it has no width */
-	overflow: hidden;
 	opacity: 0;
 	pointer-events: none;
 	padding: 0;
@@ -80,10 +77,7 @@ nav {
 	background: none;
 	box-shadow: none;
 	clip-path: none;
-	transition:
-		width var(--navSpeed) var(--navEase),
-		margin var(--navSpeed) var(--navEase),
-		opacity var(--navSpeed) var(--navEase);
+	transition: opacity var(--navSpeed) var(--navEase);
 }
 
 /* Off to the right of the closed sidebar, where it's clipped; fades in as the sidebar opens */
@@ -95,8 +89,6 @@ nav {
 }
 
 nav:is(:hover, :has(:focus-visible), .pinned) #pin {
-	width: 32px;
-	margin-right: 0;
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -111,7 +103,7 @@ main #content {
 	transition: padding-left var(--navSpeed) var(--navEase);
 }
 nav.pinned ~ main #content {
-	padding-left: 208px;
+	padding-left: calc(var(--navOpen) + 16px);
 }
 
 .navItems {
@@ -121,7 +113,7 @@ nav.pinned ~ main #content {
 		visibility 0.15s;
 	z-index: 2;
 	flex-wrap: wrap;
-	height: calc(100% - 40px);
+	flex: 1 0 auto; /* fills the sidebar, pushing the pin to the bottom */
 	align-content: space-between;
 }
 
@@ -178,7 +170,7 @@ nav li {
 nav a {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 12px;
 	margin-bottom: 10px;
 }
 
@@ -197,13 +189,14 @@ nav a.active img {
    the sidebar is open; the closed sidebar shows a compact summary in the same spot */
 #instanceArea {
 	position: relative;
-	width: 176px;
+	width: calc(var(--navOpen) - 16px);
 	margin-top: 8px;
 }
 
 #instance {
 	display: grid; /* name row, then the stats */
-	grid-template-rows: 36px auto; /* name row (first of --instanceRows), then the stats */
+	grid-template-rows: var(--instanceRow) auto; /* name row, then the stats */
+	grid-template-columns: minmax(0, 1fr); /* never wider than the sidebar, whatever is inside */
 	background-color: var(--darkest2);
 	opacity: 0;
 	pointer-events: none;
@@ -217,14 +210,13 @@ nav:is(:hover, :has(:focus-visible), .pinned) #instance {
 .instanceCompact {
 	position: absolute;
 	top: 0;
-	left: 0;
-	width: 64px;
+	left: -4px; /* borrows 4px of the sidebar padding each side so a 32px icon fits inside */
+	width: 88px;
 	height: 100%;
 	display: grid;
-	grid-template-rows: var(--instanceRows);
-	grid-auto-rows: var(--instanceUpdateRow);
+	grid-auto-rows: var(--instanceRow);
 	align-items: center;
-	justify-items: start;
+	justify-items: center;
 	padding: 0 4px 6px;
 	background-color: var(--darkest2);
 	transition: opacity var(--navSpeed) var(--navEase);
@@ -232,12 +224,7 @@ nav:is(:hover, :has(:focus-visible), .pinned) #instance {
 .instanceCompact span {
 	display: flex;
 	align-items: center;
-	gap: 2px;
-}
-/* Two-digit memory readings shrink a little to fit the box. 16px is off Monocraft's 9px pixel grid, so it is
-   very slightly softer than the other text */
-.instanceCompact .shrunk {
-	font-size: 16px;
+	gap: 4px;
 }
 /* Stopped or empty server: no stats rows to line up with, so the light (and update icon) sit centred in the box */
 .instanceCompact.statusOnly {
@@ -246,14 +233,11 @@ nav:is(:hover, :has(:focus-visible), .pinned) #instance {
 	align-items: center;
 	justify-content: space-evenly;
 }
-.instanceCompact .centered {
-	justify-self: center;
-}
 nav:is(:hover, :has(:focus-visible), .pinned) .instanceCompact {
 	opacity: 0;
 }
 
-/* Square pixel status light: green running, red stopped */
+/* Square pixel status light, as big as an icon: green running, red stopped */
 .statusLight {
 	width: calc(var(--pc) * 8);
 	height: calc(var(--pc) * 8);
@@ -273,7 +257,7 @@ nav:is(:hover, :has(:focus-visible), .pinned) .instanceCompact {
 /* The name row is the box's lighter header: no border of its own */
 #instance .instanceToggle {
 	justify-content: space-between;
-	height: 36px;
+	height: var(--instanceRow);
 	padding: 0 8px;
 	border: 0;
 	clip-path: none;
@@ -287,14 +271,14 @@ nav:is(:hover, :has(:focus-visible), .pinned) .instanceCompact {
 }
 
 /* Instance list opens in place under the name, pushing the stats down */
-/* Instance menu: floats over the stats at the box's full width, hanging off the name row (no top border).
+/* Instance menu: floats over the stats at the box's full width, hanging off the name row (no top border), only as
+   tall as its entries.
    Outside the box so the box's clipped corners don't cut it off */
 .instanceMenu {
 	position: absolute;
 	left: 0;
 	right: 0;
 	z-index: 5;
-	filter: drop-shadow(var(--pc) var(--pc) 0 var(--darkest1)) drop-shadow(var(--pc) var(--pc) 0 var(--darkest1));
 }
 nav:not(:hover, :has(:focus-visible), .pinned) .instanceMenu {
 	display: none; /* closing the sidebar hides it with the rest of the box */
@@ -303,15 +287,6 @@ nav:not(:hover, :has(:focus-visible), .pinned) .instanceMenu {
 	border: var(--pc) solid var(--darkest4);
 	border-top: 0;
 	background-color: var(--darkest1);
-	/* Pixel corners on the bottom only, with the inner corner pixel filled as on .pixelBox */
-	clip-path: polygon(
-		0 0, 100% 0, 100% calc(100% - var(--pc)), calc(100% - var(--pc)) calc(100% - var(--pc)),
-		calc(100% - var(--pc)) 100%, var(--pc) 100%, var(--pc) calc(100% - var(--pc)), 0 calc(100% - var(--pc))
-	);
-	background-image: linear-gradient(var(--darkest4), var(--darkest4)), linear-gradient(var(--darkest4), var(--darkest4));
-	background-size: var(--pc) var(--pc);
-	background-position: bottom left, bottom right;
-	background-repeat: no-repeat;
 }
 .instanceList button {
 	display: flex;
@@ -335,13 +310,15 @@ nav:not(:hover, :has(:focus-visible), .pinned) .instanceMenu {
 	flex-direction: column;
 	padding: 0 8px 6px;
 }
-/* Row heights match the closed summary's (--instanceRows, --instanceUpdateRow) so lines sit at the same heights */
+/* Every row is --instanceRow tall, like the closed summary's, so the lines match */
 .instanceStats,
 .instanceState {
-	height: 30px;
+	height: var(--instanceRow);
 }
 #instance .updateButton {
-	height: var(--instanceUpdateRow);
+	height: var(--instanceRow);
+	padding-block: 0;
+	overflow: hidden;
 }
 
 .instanceStats {
@@ -391,21 +368,24 @@ nav:before {
 }
 
 nav:is(:hover, :has(:focus-visible), .pinned) ~ main footer {
-	margin-left: 192px;
+	margin-left: var(--navOpen);
 }
 
 footer {
-	padding-top: 16px;
+	display: flex;
+	justify-content: space-between; /* copyright left, links right */
+	align-items: center;
+	padding: 0 16px 0 0;
 	background-color: var(--darkest2);
 	height: 64px;
 	z-index: 3;
 	position: relative;
-	margin-left: 80px;
+	margin-left: var(--navClosed);
 	transition: margin-left var(--navSpeed) var(--navEase);
 }
 
 footer::before {
-	content: url(/media/icons/rounding-pixel.png);
+	content: url(/media/icons/sidebar-footer-rounder.png);
 	zoom: var(--scale);
 	line-height: 0; /* hug the image instead of sitting in a 27px text line box */
 	font-size: 0;
@@ -415,6 +395,11 @@ footer::before {
 	z-index: -1;
 }
 
+.footerLinks {
+	display: flex;
+	gap: 12px;
+}
+
 footer p, footer a {
 	margin: 0;
 	font-size: 18px;
@@ -422,9 +407,9 @@ footer p, footer a {
 
 /* Navigation open on hover */
 nav:is(:hover, :has(:focus-visible), .pinned) {
-	width: 192px;
+	width: var(--navOpen);
 	padding: 8px;
-	min-width: 192px;
+	min-width: var(--navOpen);
 }
 
 nav ul ul {
@@ -435,13 +420,13 @@ nav ul ul {
 	overflow: hidden;
 	padding-left: 10px;
 
-	border-left: 2px solid var(--lightest1);
-	margin-left: 5px;
+	border-left: var(--pc) solid var(--lightest1);
+	margin-left: 9px;
 	white-space: nowrap;
 }
 
 nav:is(:hover, :has(:focus-visible), .pinned) .navGroup.open ul {
-	max-height: 112px;
+	max-height: 240px; /* room for the section's pages; animates open */
 	margin-bottom: 10px;
 }
 
@@ -453,8 +438,7 @@ nav ul ul p {
 	transform: translateX(0) !important;
 }
 
-
-/* Section header (Settings): opens its pages rather than being one, so it reads as a dropdown, not a tab */
+/* Section header (Options): opens its pages rather than being one, so it reads as a dropdown, not a tab */
 nav li.navGroup {
 	display: block;
 	width: 100%;
@@ -463,7 +447,7 @@ button.navGroupToggle {
 	display: flex;
 	position: relative;
 	align-items: center;
-	gap: 5px;
+	gap: 12px;
 	width: 100%;
 	margin-bottom: 10px;
 	padding: 0;
@@ -476,13 +460,7 @@ button.navGroupToggle:hover {
 	background: none;
 	color: var(--lightest1);
 }
-/* Tucked into the bottom right corner, as on the player head, so a long label never pushes it out */
 .navGroupToggle .dropdownArrow {
-	position: absolute;
-	right: 3px;
-	bottom: 3px;
-	top: auto; /* drop the shared one-pixel nudge */
-	left: auto;
 	opacity: 0; /* only once the sidebar is open, fading with the labels */
 	transition: opacity var(--navSpeed) var(--navEase);
 }
@@ -493,13 +471,12 @@ nav:is(:hover, :has(:focus-visible), .pinned) ~ main {
 	--navEase: var(--ease);
 }
 
-/* Pages inside a section are marked bold; the white selected box belongs to the section header */
+/* Pages inside a section are marked in blue; the white selected box belongs to the section header */
 nav .navGroup ul a.active,
 nav .navGroup ul a.active p {
 	background: none;
-	color: inherit;
+	color: var(--blue4);
 	clip-path: none;
-	font-weight: bold;
 }
 
 /* Section holding the current page: stays open and looks selected, like a tab */
@@ -514,4 +491,46 @@ nav .navGroup ul a.active p {
 }
 nav:is(:hover, :has(:focus-visible), .pinned) .navGroupToggle .dropdownArrow {
 	opacity: 1;
+}
+
+nav::-webkit-scrollbar {
+	display: none;
+}
+
+/* Tab icons are 48px in the closed sidebar's 80px of content: 16px of padding on the left centres each icon, and
+   its selected box, with 16px either side. The same padding stays when open so nothing moves */
+.navItems > ul > li > a,
+button.navGroupToggle {
+	padding-left: 16px;
+}
+
+/* Tab and section labels at Monocraft's 3x size (27px) to sit with the 48px icons; Options' pages are 27px
+   small caps too, shorter than the labels above them. Every entry gets 8px of room above and below */
+.navItems > ul > li > a p,
+.navGroupToggle p,
+nav .navGroup ul p {
+	font-size: 27px;
+	line-height: 1;
+}
+.navItems a,
+button.navGroupToggle {
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+/* Options' label with its dropdown arrow tucked under the end of the text, so the arrow adds no width */
+.navGroupLabel {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+/* Hovering the Options header underlines its label like a link (it's a button, so links' underline doesn't reach it) */
+button.navGroupToggle:hover p {
+	text-decoration: underline;
+}
+
+/* Closed sidebar's status light: corner pixels knocked off, a rounded pixel dot */
+.instanceCompact .statusLight {
+	clip-path: var(--pixelCorners);
 }

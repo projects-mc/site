@@ -13,14 +13,6 @@ body {
 
 @font-face {
 	font-family: 'Monocraft';
-	font-style: normal;
-	font-weight: 700;
-	font-display: swap;
-	src: url(/fonts/monocraft-bold.woff2) format('woff2');
-}
-
-@font-face {
-	font-family: 'Monocraft';
 	font-style: italic;
 	font-weight: 400;
 	font-display: swap;
@@ -138,12 +130,10 @@ a:has(> h1, h2, h3, h4) {
 
 a:hover h2 {
 	text-decoration: underline;
-	text-decoration-color: var(--blue2);
 }
 
-a:not(.navItems ul li a):not(#logo) {
+a:not(.navItems ul li a):not(#logo):not(footer a) {
 	color: var(--lightest3);
-	text-decoration-color: var(--lightest3);
 	text-decoration: underline;
 }
 
@@ -160,13 +150,14 @@ ul::marker {
 	color: var(--blue1);
 }
 
-/* Pixel underlines: two art pixels thick and offset on the pixel grid everywhere.
-   !important because the text-decoration shorthand elsewhere resets thickness */
+/* Pixel underlines: one art pixel thick and offset on the pixel grid everywhere.
+   !important because the text-decoration shorthand elsewhere resets thickness and colour */
 a,
 a * {
-	text-decoration-thickness: calc(var(--scale) * 2px) !important;
-	text-underline-offset: calc(var(--scale) * 2px) !important;
+	text-decoration-thickness: calc(var(--scale) * 1px) !important;
+	text-underline-offset: calc(var(--scale) * 1px) !important;
 	text-decoration-skip-ink: none;
+	text-decoration-color: var(--blue3) !important; /* every underline in the darker Nord blue */
 }
 
 /* Big white [instance name] at the top of instance pages */
@@ -174,4 +165,14 @@ h1.instanceTitle {
 	font-size: 54px;
 	color: var(--lightest1);
 	text-align: center;
+}
+
+/* Monocraft is never bold: there is no bold face loaded, and the browser must not fake one */
+html {
+	font-synthesis: none;
+}
+b,
+strong,
+th {
+	font-weight: inherit;
 }

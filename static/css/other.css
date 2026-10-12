@@ -25,7 +25,6 @@ input[type='range']:hover {
 
 a:hover {
 	text-decoration: underline;
-	text-decoration-color: var(--blue1);
 }
 
 /* Buttons: flat pixel art boxes with notched corners */
@@ -113,7 +112,6 @@ blockquote {
 		color 0.2s ease,
 		padding 0.2s ease;
 	font-size: 36px;
-	font-weight: 700px;
 	text-align: center;
 }
 
@@ -166,23 +164,23 @@ hr {
 	height: 0;
 }
 
-/* Scrollbars: a square Nord blue line, four art pixels wide, with two art pixels of margin all round */
+/* Scrollbars: a square Nord blue line, two art pixels wide, with one art pixel of margin all round */
 ::-webkit-scrollbar {
-	width: calc(var(--pc) * 8);
-	height: calc(var(--pc) * 8);
+	width: calc(var(--pc) * 4);
+	height: calc(var(--pc) * 4);
 }
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-corner {
 	background: transparent;
 }
 ::-webkit-scrollbar-track {
-	margin: calc(var(--pc) * 2);
+	margin: var(--pc);
 }
 /* Transparent border plus padding-box clip keeps the margin either side of the line */
 ::-webkit-scrollbar-thumb {
 	background: var(--blue3);
 	background-clip: padding-box;
-	border: calc(var(--pc) * 2) solid transparent;
+	border: var(--pc) solid transparent;
 	border-radius: 0;
 }
 ::-webkit-scrollbar-button {
@@ -254,21 +252,34 @@ button {
 /* Square pixel art icon button */
 button.iconButton {
 	display: flex;
-	padding: 2px;
+	padding: 4px;
 }
 
-/* Text with a date/time popover (timeTip component) */
+/* Text with a date/time tooltip (timeTip component) */
 .timeTipAnchor {
 	cursor: help;
-	text-decoration: underline dotted;
-	text-underline-offset: calc(var(--pc) * 2);
+	/* Pixel dotted underline: one art pixel thick, dots one art pixel long, at the same height as link underlines */
+	padding-bottom: var(--pc);
+	background: repeating-linear-gradient(to right, var(--blue3) 0 var(--pc), transparent var(--pc) calc(var(--pc) * 2))
+		left bottom 3px / 100% var(--pc) no-repeat; /* 3px up lines it up with link underlines (measured at 18px) */
 }
-.timeTip {
+/* Tooltip box (use:tooltip) */
+.tooltip {
 	position: fixed;
 	inset: auto;
 	margin: 0;
 	padding: 2px 8px;
 	color: var(--lightest1);
 	background-color: var(--darkest3);
+	white-space: nowrap;
+}
+
+/* Read by screen readers, not drawn */
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
 	white-space: nowrap;
 }

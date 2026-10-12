@@ -28,22 +28,11 @@
 	</a>
 
 	<div id="sidebarTop">
-		<button
-			id="pin"
-			onclick={togglePin}
-			onmouseenter={() => pinHovered = true}
-			onmouseleave={() => pinHovered = false}
-			aria-pressed={pinned}
-			aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
-		>
-			<img src="/media/icons/{pinIcon}.png" alt="" class="noImgStyle">
-		</button>
 		<a href="/" id="logo">
 			<img src="/media/icons/playboard.png" alt="Playboard logo" class="noImgStyle">
 		</a>
 		<div id="playerhead">
 			<img src="/media/icons/player-head.png" alt="AmazinAxel's head" class="noImgStyle">
-			<img src="/media/icons/dropdown-arrow.png" alt="" class="noImgStyle dropdownArrow">
 		</div>
 	</div>
 
@@ -62,4 +51,16 @@
 			{/each}
 		</ul>
 	</div>
+
+	<!-- Pins the sidebar open; bottom right corner, only while the sidebar is open -->
+	<button
+		id="pin"
+		onclick={togglePin}
+		onmouseenter={() => pinHovered = true}
+		onmouseleave={() => pinHovered = false}
+		aria-pressed={pinned}
+		aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
+	>
+		<img src="/media/icons/{pinIcon}.png" alt="" class="noImgStyle">
+	</button>
 </nav>

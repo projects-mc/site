@@ -16,8 +16,8 @@ main {
 #content {
 	margin: 48px auto;
 	max-width: 1280px;
-	padding: 30px 15px 30px 96px;
-	/* This fixes the footer issue; 96px is padding size, 64px is footer height) */
+	padding: 30px 15px 30px calc(var(--navClosed) + 16px);
+	/* This fixes the footer issue; 96px is the top and bottom margin, 64px the footer height */
 	min-height: calc(100vh - 96px - 64px);
 }
 

@@ -1,6 +1,7 @@
 <script>
 	import { page } from '$app/state';
 	import NavSubitem from '#lib/components/navSubitem.svelte';
+	import SmallCaps from '#lib/components/smallCaps.svelte';
 
 	// A sidebar section that only groups pages: its header opens and closes the list instead of linking anywhere.
 	// While one of its pages is the current one it stays open and shows as selected
@@ -18,13 +19,15 @@
 		aria-disabled={hasCurrentPage}
 	>
 		<img src="/media/icons/{title.toLowerCase()}.png" alt="" class="noImgStyle">
-		<p>{title}</p>
-		<img src="/media/icons/dropdown-arrow.png" alt="" class="noImgStyle dropdownArrow" class:open>
+		<span class="navGroupLabel">
+			<p>{title}</p>
+			<img src="/media/icons/dropdown-arrow.png" alt="" class="noImgStyle dropdownArrow" class:open>
+		</span>
 	</button>
 	<ul>
 		{#each subitems as subpage}
 			<NavSubitem href="{route}/{subpage.route}">
-				<p>{subpage.title}</p>
+				<p><SmallCaps text={subpage.title}/></p>
 			</NavSubitem>
 		{/each}
 	</ul>

@@ -26,10 +26,10 @@
 	<div class="instanceCompact pixelBox" class:statusOnly={!showStats} aria-hidden="true">
 		{#if showStats}
 			<span><img src="/media/icons/players.png" alt="" class="noImgStyle">{instance.players}</span>
-			<span class:shrunk={instance.memory >= 10}><img src="/media/icons/memory.png" alt="" class="noImgStyle">{instance.memory}%</span>
+			<span><img src="/media/icons/memory.png" alt="" class="noImgStyle">{instance.memory}%</span>
 		{/if}
-		<span class="statusLight centered" class:running={instance.running}></span>
-		{#if instance.updateAvailable}<img src="/media/icons/update.png" alt="" class="noImgStyle centered">{/if}
+		<span class="statusLight" class:running={instance.running}></span>
+		{#if instance.updateAvailable}<img src="/media/icons/update.png" alt="" class="noImgStyle">{/if}
 	</div>
 
 	<!-- Open sidebar: one box with the instance name (its list opens over the stats), then the stats -->

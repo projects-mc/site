@@ -2,4 +2,6 @@
 	import Title from '#lib/components/title.svelte';
 </script>
 
-<Title name="Options"/>
+<Title name="Terms of Use"/>
+
+<p>Placeholder.</p>
