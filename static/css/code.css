@@ -1,0 +1,82 @@
+/* Code page: a file list beside a plain text editor */
+.code {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+}
+
+.codeFiles {
+	flex: 0 0 360px;
+	padding: 8px 12px;
+	background-color: var(--darkest2);
+}
+.codeFiles ul {
+	list-style: none;
+	padding: 0;
+	margin: 8px 0 0;
+}
+.codeFiles li {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.codeFiles li.open .codeEntry {
+	color: var(--blue2);
+}
+
+.codePath {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+.codePath button,
+.codeEntry {
+	background: none;
+	padding: 2px 4px;
+	text-align: left;
+}
+.codeEntry {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.codeActions {
+	display: flex;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.codeSize {
+	color: var(--lightest3);
+	font-size: 14px;
+}
+
+.codeEditor {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 8px 12px;
+	background-color: var(--darkest2);
+}
+.codeEditor header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.codeEditor textarea {
+	margin: 8px 0 0;
+	height: 65vh;
+	max-height: none;
+	font-family: 'Iosevka', monospace;
+	font-size: 16px;
+	tab-size: 4;
+	white-space: pre;
+	color: var(--lightest1);
+}
+
+.codeError {
+	color: var(--red);
+}

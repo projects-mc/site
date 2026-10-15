@@ -26,10 +26,10 @@
 	<link rel="stylesheet" href="/css/log.css"/>
 </svelte:head>
 
-{#snippet highlighted(text)}{#each parts(text) as part}{#if part.isMatch}<mark>{part.text}</mark>{:else}{part.text}{/if}{/each}{/snippet}
+{#snippet highlighted(text)}{#each parts(text) as part, i (i)}{#if part.isMatch}<mark>{part.text}</mark>{:else}{part.text}{/if}{/each}{/snippet}
 
 <div class="logLines">
-	{#each lines as line}
+	{#each lines as line, i (i)}
 		<div class="logLine" class:continuation={!line.time}>
 			{#if line.time}
 				<span class="logTime">{@render highlighted(line.time)}</span>

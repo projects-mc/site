@@ -1,5 +1,6 @@
 <script>
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	let {
 		href,
 		icon,
@@ -12,7 +13,7 @@
 
 <li>
 	<a
-		{href}
+		href={resolve(href)}
 		class:active={isCurrentPage}
 		aria-current={isCurrentPage ? 'page' : false}
 		target={external ? "_blank" : ''}
@@ -20,7 +21,7 @@
 	>
 		<img class="noImgStyle" 
 			src="/media/icons/{icon}.png" 
-			alt="{href} Header icon"
+			alt=""
 		/>
 		{@render children?.()}
 		{#if external}

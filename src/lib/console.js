@@ -1,5 +1,6 @@
-// "[23:24:23 INFO]: [source] message" -> parts; anything else (e.g. a plugin list continuation) is kept as plain text
-const linePattern = /^\[(\d\d:\d\d:\d\d) (\w+)\]: (?:\[([^\]]+)\] )?(.*)$/;
+// "[23:24:23 INFO] [source] message" (madrone) or "[23:24:23 INFO]: [source] message" (Paper) -> parts; anything else
+// (aspen's own lines, a stack trace) is kept as plain text
+const linePattern = /^\[(\d\d:\d\d:\d\d) (\w+)\]:? (?:\[([^\]]+)\] )?(.*)$/;
 
 export function parseLog(text) {
 	return text.trimEnd().split('\n').map((line) => {

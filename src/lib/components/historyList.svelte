@@ -23,7 +23,7 @@
 		<p>{emptyText}</p>
 	{:else}
 		<ul class="historyList" style="--historyColumns: {columns}">
-			{#each items as item, i}
+			{#each items as item, i (item.id ?? i)}
 				<li class="historyItem pixelBox" class:latest={i === 0}>
 					<span class="historyLabel">{#if label}{@render label(item, i === 0)}{:else}{i === 0 ? 'Latest' : item.age}{/if}</span>
 					{#if hasRange}<span class="historyRange">{#if range}{@render range(item)}{:else}{item.range}{/if}</span>{/if}

@@ -3,6 +3,7 @@
 	import Header from '#lib/components/header.svelte';
 	import Footer from '#lib/components/footer.svelte';
 	import { navItems } from '#lib/config';
+	import { session, currentInstance, refresh } from '#lib/session.svelte.js';
 	import { preloadCode } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
@@ -12,12 +13,18 @@
 	// Delays and fadeouts are glitchy atm ;(
 	const transitionIn = { duration: 150 };
 
-	// Prefetch all top-level routes for better speed
-	onMount(() => {
-		const routes = navItems.map((item) => item.route);
-		preloadCode(...routes);
-	});
+	// Pages about one instance need a login and an instance; the rest (home, login, legal) don't
+	const instancePages = navItems.map((item) => item.route);
+	let needsInstance = $derived(instancePages.some((route) => page.url.pathname.startsWith(route)));
 
+	onMount(() => {
+		// Prefetch all top-level routes for better speed
+		preloadCode(...instancePages);
+		refresh();
+		// Keeps state, players and memory current; skipped while the tab is hidden
+		const timer = setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+		return () => clearInterval(timer);
+	});
 </script>
 <svelte:head>
 	<!-- Top: least important styles | bottom: most important styles -->
@@ -44,7 +51,19 @@
 	{#key page.url.pathname}
 		<main tabindex="-1" in:fade|local={transitionIn}>
 			<div id="content">
-				{@render children?.()}
+				{#if !needsInstance}
+					{@render children?.()}
+				{:else if !session.loaded}
+					<p>Loading...</p>
+				{:else if !session.user}
+					<h1>Log in</h1>
+					<p>Join <code>playboardmc.com</code> in Minecraft and type <code>/dashboard</code> in the lobby.</p>
+				{:else if !currentInstance()}
+					<h1>No servers yet</h1>
+					<p>Make one with <b>New</b> in the server box on the left.</p>
+				{:else}
+					{@render children?.()}
+				{/if}
 			</div>
 			<Footer/>
 		</main>

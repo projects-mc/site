@@ -1,13 +1,17 @@
 <script>
-	import { preventDefault } from 'svelte/legacy';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 
 	import { navItems } from '#lib/config';
 	import NavItem from '#lib/components/navItem.svelte';
 	import NavGroup from '#lib/components/navGroup.svelte';
 	import InstanceSelector from '#lib/components/instanceSelector.svelte';
+	import { session } from '#lib/session.svelte.js';
 
-	const focusMainContent = () => { document.querySelector("main").focus(); }
+	const focusMainContent = (e) => {
+		e.preventDefault();
+		document.querySelector("main").focus();
+	};
 
 	// Pinning keeps the sidebar open and pushes the page content over; remembered across visits
 	let pinned = $state(false);
@@ -23,16 +27,21 @@
 </script>
 
 <nav class:pinned>
-	<a onclick={preventDefault(focusMainContent)} id="skipToContent" href="#content">
+	<a onclick={focusMainContent} id="skipToContent" href="#content">
 		Skip to content
 	</a>
 
 	<div id="sidebarTop">
-		<a href="/" id="logo">
+		<a href={resolve('/')} id="logo">
 			<img src="/media/icons/playboard.png" alt="Playboard logo" class="noImgStyle">
 		</a>
 		<div id="playerhead">
-			<img src="/media/icons/player-head.png" alt="AmazinAxel's head" class="noImgStyle">
+			<!-- The player's own face (8x8) once logged in -->
+			<img
+				src={session.user ? `https://mc-heads.net/avatar/${session.user.id}/8` : '/media/icons/player-head.png'}
+				alt={session.user ? `${session.user.name}'s head` : ''}
+				class="noImgStyle"
+			>
 		</div>
 	</div>
 
@@ -40,7 +49,7 @@
 
 	<div class="navItems">
 		<ul>
-			{#each navItems as navitem}
+			{#each navItems as navitem (navitem.route)}
 				{#if typeof navitem.subitems == 'undefined'}
 					<NavItem href={navitem.route} icon={navitem.title.toLowerCase()}>
 						<p>{navitem.title}</p>

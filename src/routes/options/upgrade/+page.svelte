@@ -3,3 +3,4 @@
 </script>
 
 <Title name="Upgrade"/>
+<p>Every server is free for now. Bigger servers are coming later.</p>

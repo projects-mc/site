@@ -4,14 +4,58 @@
 	import HistoryList from '#lib/components/historyList.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
 	import LogViewer from '#lib/components/logViewer.svelte';
-	import { currentInstance } from '#lib/instance.svelte.js';
-	import { formatRange } from '#lib/format';
-	import log from '#lib/placeholder/console-log.txt?raw';
+	import { currentInstance, act } from '#lib/session.svelte.js';
+	import { api } from '#lib/api';
+	import { formatRange, isoFromUnix, ago, formatBytes } from '#lib/format';
 
-	let instance = $derived(currentInstance());
-	// The newest log is "Latest" while the server is still writing it, "Last" once it has stopped
-	let newestLabel = $derived(instance.running ? 'Latest' : 'Last');
+	// Lines kept on screen; older ones are still in the log files below
+	const MAX_LINES = 1000;
+
+	let name = $derived(currentInstance()?.name);
+	let phase = $derived(currentInstance()?.phase ?? 'stopped');
+	let running = $derived(phase === 'running');
+	let lines = $state([]);
+	let logs = $state([]);
+	let socket;
 	let viewer;
+
+	// While running: the live console. Otherwise: the last run's log. Re-runs only when the instance or its
+	// running state changes, not on every refresh
+	$effect(() => {
+		const instance = name;
+		lines = [];
+		loadLogs(instance);
+		if (!running) {
+			api.logs(instance)
+				.then((list) => (list[0] ? api.log(instance, list[0].id) : ''))
+				.then((text) => { if (instance === name) lines = text.split('\n').slice(-MAX_LINES); })
+				.catch(() => {});
+			return;
+		}
+		socket = api.console(instance);
+		socket.onmessage = (e) => {
+			lines.push(e.data);
+			if (lines.length > MAX_LINES) lines.splice(0, lines.length - MAX_LINES);
+		};
+		return () => socket.close();
+	});
+
+	async function loadLogs(instance) {
+		const list = await api.logs(instance).catch(() => []);
+		if (instance !== name) return;
+		logs = list.map((entry) => ({
+			id: entry.id,
+			age: ago(entry.start),
+			start: isoFromUnix(entry.start),
+			end: entry.end && isoFromUnix(entry.end),
+			size: formatBytes(entry.size)
+		}));
+	}
+
+	async function view(entry, label) {
+		const text = await api.log(name, entry.id).catch((e) => e.message);
+		viewer.open(entry.end ? formatRange(entry.start, entry.end) : label, text);
+	}
 </script>
 
 <svelte:head>
@@ -19,18 +63,27 @@
 </svelte:head>
 
 <InstanceHeader page="Console"/>
-<Console {log} running={instance.running}/>
+<p class="historyHeaderActions">
+	{#if phase === 'stopped'}
+		<button onclick={() => act(() => api.start(name))}>Start</button>
+	{:else}
+		<button onclick={() => act(() => api.stop(name))} disabled={phase !== 'running'}>Stop</button>
+		<button onclick={() => act(() => api.restart(name))} disabled={phase !== 'running'}>Restart</button>
+		{#if phase !== 'running'}<span>{phase[0].toUpperCase() + phase.slice(1)}...</span>{/if}
+	{/if}
+</p>
+<Console log={lines.join('\n')} {running} oncommand={(command) => socket?.send(command)}/>
 
-<HistoryList title="Logs" items={instance.logs} emptyText="No logs yet.">
+<HistoryList title="Logs" items={logs} emptyText="No logs yet.">
 	{#snippet label(entry, isNewest)}
-		{isNewest ? newestLabel : entry.age}
+		{isNewest ? (running ? 'Latest' : 'Last') : entry.age}
 	{/snippet}
 	{#snippet range(entry)}
 		<!-- The newest log has no end yet: its label says enough, no dates -->
 		{#if entry.end}<TimeTip iso={entry.start}/> - <TimeTip iso={entry.end}/>{/if}
 	{/snippet}
 	{#snippet rowActions(entry)}
-		<button onclick={() => viewer.open(entry.end ? formatRange(entry.start, entry.end) : newestLabel, log)}>View</button>
+		<button onclick={() => view(entry, running ? 'Latest' : 'Last')}>View</button>
 	{/snippet}
 </HistoryList>
 

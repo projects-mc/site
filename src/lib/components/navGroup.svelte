@@ -25,7 +25,7 @@
 		</span>
 	</button>
 	<ul>
-		{#each subitems as subpage}
+		{#each subitems as subpage (subpage.route)}
 			<NavSubitem href="{route}/{subpage.route}">
 				<p><SmallCaps text={subpage.title}/></p>
 			</NavSubitem>

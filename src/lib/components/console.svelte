@@ -2,7 +2,8 @@
 	import LogLines from '#lib/components/logLines.svelte';
 
 	// running: the server is up, so the prompt is / (a command) rather than >
-	let { log, running } = $props();
+	// oncommand: called with each command typed
+	let { log, running, oncommand } = $props();
 
 	let output;
 	$effect(() => {
@@ -24,18 +25,29 @@
 	}
 	// Keys move the cursor after the event, so read it on the next frame
 	const trackCaretSoon = () => requestAnimationFrame(trackCaret);
+
+	function submit(e) {
+		e.preventDefault();
+		const command = input.value.trim().replace(/^\//, '');
+		if (!command || !running) return;
+		oncommand?.(command);
+		input.value = '';
+		trackCaret();
+	}
 </script>
 
 <div class="console pixelBox">
 	<div class="consoleOutput" bind:this={output}>
 		<LogLines {log}/>
 	</div>
-	<form class="consoleInput" onsubmit={(e) => e.preventDefault()}>
+	<form class="consoleInput" onsubmit={submit}>
 		<span class="consolePrompt" aria-hidden="true">{running ? '/' : '> '}</span>
 		<span class="consoleField">
 			<input
 				type="text"
 				aria-label="Server command"
+				placeholder={running ? '' : 'Start the server to run commands'}
+				disabled={!running}
 				spellcheck="false"
 				autocomplete="off"
 				bind:this={input}
