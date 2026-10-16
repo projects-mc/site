@@ -51,3 +51,18 @@ html {
 html {
 	background: var(--darkest2);
 }
+
+:is(.noSidebar, :root.loggedOut) #content {
+	padding-left: 15px;
+}
+
+/* Texture overlay for the page content, over everything in it (buttons, boxes, text) but under the sidebar and
+   footer, which are stacked above it with their own texture. Clicks pass straight through */
+.layout::after {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: 2;
+	pointer-events: none;
+	background: var(--backgroundTexture);
+}

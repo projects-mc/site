@@ -28,15 +28,16 @@
 	--primaryFont: 'Monocraft', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
 		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
-	--ease: cubic-bezier(0, 0.6, 0.3, 1);
 	/* Sidebar widths: closed fits the 64px logo and the summary box's "42%" (32px icon + 36px text) */
 	--navClosed: 96px;
 	--navOpen: 240px; /* fits "Options" at 27px beside its 48px icon, and its dropdown arrow */
-	--navSpeed: 0.15s; /* every sidebar open/close transition */
-	/* --ease played backwards, so closing the sidebar retraces opening */
-	--easeReverse: cubic-bezier(0.7, 0, 1, 0.4);
-	/* Sidebar transitions use the curve of the state they head to: --ease opening, --easeReverse closing */
-	--navEase: var(--easeReverse);
+	/* Sidebar open/close: 4 held frames, 0.05s each, like a sprite animation instead of a smooth slide. The frames
+	   follow a playful curve: a quick start, an overshoot past the end, then a settle back. Opacity steps through the
+	   same frames, so fades read as deliberate frames rather than a smooth fade (it simply holds at 1 on the
+	   overshoot). Frames sit on twelfths so the 144px width change (36 art pixels) and the 48px label slide land on
+	   whole art pixels every frame */
+	--navSpeed: 0.2s;
+	--navEase: linear(0.3333 0%, 0.3333 25%, 0.8333 25%, 0.8333 50%, 1.0833 50%, 1.0833 75%, 1 75%, 1 100%);
 
 	/* Every row of the instance box, open and closed, so lines match and the spacing between them is even */
 	--instanceRow: 40px;
@@ -44,6 +45,11 @@
 	/* Pixel art scale: screen pixels per art pixel, for every sprite, border, notch and line. Text is the one
 	   exception: Monocraft stays at 18px (2px pixels) to stay a normal reading size */
 	--scale: 4;
+
+	/* Texture overlays laid over everything like a shader: 16x16 tiles, transparent except light or dark specks.
+	   Fixed, so the sidebar and footer tiles line up with each other wherever they sit */
+	--sidebarTexture: url(/media/icons/sidebar-texture.png) 0 0 / calc(16 * var(--pc)) fixed;
+	--backgroundTexture: url(/media/icons/background-texture.png) 0 0 / calc(16 * var(--pc)) fixed;
 
 	/* Clip shape that knocks one art pixel off each corner, for pixel art boxes */
 	--pc: calc(var(--scale) * 1px);

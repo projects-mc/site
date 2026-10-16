@@ -10,9 +10,16 @@
 .consoleOutput {
 	flex: 1;
 	overflow-y: auto;
+	/* Bottom up, so it opens scrolled to the newest line with no first frame at the top; one child keeps the order */
+	display: flex;
+	flex-direction: column-reverse;
 	padding: 8px 12px;
 	font-size: 18px;
 	line-height: 27px;
+}
+/* A short log still starts at the top rather than sitting at the bottom of the box */
+.consoleOutput > div {
+	margin-bottom: auto;
 }
 
 .consoleInput {
@@ -74,4 +81,13 @@
 	white-space: pre;
 	user-select: none;
 	color: var(--blue4);
+}
+
+/* Top of the console once older lines are dropped: points to the full log instead of keeping them all on screen */
+.consoleOlder {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 0 0 8px;
+	color: var(--lightest3);
 }

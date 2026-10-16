@@ -8,37 +8,78 @@
 	import { api } from '#lib/api';
 	import { formatRange, isoFromUnix, ago, formatBytes } from '#lib/format';
 
-	// Lines kept on screen; older ones are still in the log files below
-	const MAX_LINES = 1000;
+	// Lines kept on screen; older ones are still in the log files below. Kept small so a flood of errors can't
+	// lag the page
+	const MAX_LINES = 100;
 
 	let name = $derived(currentInstance()?.name);
 	let phase = $derived(currentInstance()?.phase ?? 'stopped');
 	let running = $derived(phase === 'running');
+	let live = $derived(phase !== 'stopped'); // aspen has the server's process, and so a console
 	let lines = $state([]);
+	let trimmed = $state(false); // older lines were dropped, so the console points to the full log
 	let logs = $state([]);
 	let socket;
 	let viewer;
 
-	// While running: the live console. Otherwise: the last run's log. Re-runs only when the instance or its
-	// running state changes, not on every refresh
+	// While the server is up (starting, running or stopping): the live console, which aspen serves from the moment it
+	// starts, so startup output shows straight away. Otherwise: the last run's log. Re-runs only when the instance or
+	// whether it's up changes, not on every refresh
 	$effect(() => {
 		const instance = name;
 		lines = [];
+		trimmed = false;
 		loadLogs(instance);
-		if (!running) {
+		if (!live) {
 			api.logs(instance)
 				.then((list) => (list[0] ? api.log(instance, list[0].id) : ''))
-				.then((text) => { if (instance === name) lines = text.split('\n').slice(-MAX_LINES); })
+				.then((text) => {
+					if (instance !== name || live) return;
+					const all = text.split('\n');
+					lines = all.slice(-MAX_LINES);
+					trimmed = all.length > MAX_LINES;
+				})
 				.catch(() => {});
 			return;
 		}
-		socket = api.console(instance);
-		socket.onmessage = (e) => {
-			lines.push(e.data);
-			if (lines.length > MAX_LINES) lines.splice(0, lines.length - MAX_LINES);
+		// Lines arriving together (a stack trace, a burst of errors) are added once per frame, not one by one
+		let pending = [];
+		let frame = 0;
+		let retry = 0;
+		let isDone = false;
+		// aspen closes the console when the server stops; a restart can stop and start again between refreshes, so
+		// reconnect until this effect is torn down. Each connection resends the recent lines, so start from empty
+		function connect() {
+			lines = [];
+			trimmed = false;
+			socket = api.console(instance);
+			socket.onmessage = (e) => {
+				pending.push(e.data);
+				frame ||= requestAnimationFrame(() => {
+					const all = lines.concat(pending);
+					lines = all.slice(-MAX_LINES);
+					trimmed ||= all.length > MAX_LINES;
+					pending = [];
+					frame = 0;
+				});
+			};
+			socket.onclose = () => { if (!isDone) retry = setTimeout(connect, 1000); };
+		}
+		connect();
+		return () => {
+			isDone = true;
+			cancelAnimationFrame(frame);
+			clearTimeout(retry);
+			socket.close();
 		};
-		return () => socket.close();
 	});
+
+	// Start clears the console at once rather than leaving the last run's log up until the server reports in
+	function start() {
+		lines = [];
+		trimmed = false;
+		act(() => api.start(name), true);
+	}
 
 	async function loadLogs(instance) {
 		const list = await api.logs(instance).catch(() => []);
@@ -65,14 +106,20 @@
 <InstanceHeader page="Console"/>
 <p class="historyHeaderActions">
 	{#if phase === 'stopped'}
-		<button onclick={() => act(() => api.start(name))}>Start</button>
+		<button onclick={start}>Start</button>
 	{:else}
-		<button onclick={() => act(() => api.stop(name))} disabled={phase !== 'running'}>Stop</button>
-		<button onclick={() => act(() => api.restart(name))} disabled={phase !== 'running'}>Restart</button>
+		<button onclick={() => act(() => api.stop(name), true)} disabled={phase !== 'running'}>Stop</button>
+		<button onclick={() => act(() => api.restart(name), true)} disabled={phase !== 'running'}>Restart</button>
 		{#if phase !== 'running'}<span>{phase[0].toUpperCase() + phase.slice(1)}...</span>{/if}
 	{/if}
 </p>
-<Console log={lines.join('\n')} {running} oncommand={(command) => socket?.send(command)}/>
+<Console
+	log={lines.join('\n')}
+	{running}
+	{trimmed}
+	oncommand={(command) => socket?.send(command)}
+	onopenlog={() => logs[0] && view(logs[0], running ? 'Latest' : 'Last')}
+/>
 
 <HistoryList title="Logs" items={logs} emptyText="No logs yet.">
 	{#snippet label(entry, isNewest)}

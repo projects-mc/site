@@ -1,13 +1,17 @@
 body {
 	line-height: 1.5;
 	font-size: 18px;
+	/* One Monocraft pixel at any font size */
+	--fontPixel: calc(1em / 9);
+	/* Minecraft style shadow: one font pixel down and right, in a near black shade of the text's own colour */
+	text-shadow: var(--fontPixel) var(--fontPixel) 0 color-mix(in srgb, currentColor 15%, black);
 }
 
 @font-face {
 	font-family: 'Monocraft';
 	font-style: normal;
 	font-weight: 400;
-	font-display: swap;
+	font-display: block; /* preloaded in app.html: hide text the moment it takes rather than reflow from a fallback */
 	src: url(/fonts/monocraft-regular.woff2) format('woff2');
 }
 
@@ -15,7 +19,7 @@ body {
 	font-family: 'Monocraft';
 	font-style: italic;
 	font-weight: 400;
-	font-display: swap;
+	font-display: block;
 	src: url(/fonts/monocraft-italic.woff2) format('woff2');
 }
 
@@ -98,7 +102,8 @@ h6 {
 	font-family: var(--headerFont);
 	font-weight: lighter;
 	color: var(--blue2);
-	text-shadow: calc(1em / 9) calc(1em / 9) 0 var(--darkest1);
+	/* Darker blue than the text, but lighter than the page so it still shows */
+	text-shadow: var(--fontPixel) var(--fontPixel) 0 color-mix(in srgb, var(--blue3) 70%, black);
 }
 
 h1 {

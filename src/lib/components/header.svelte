@@ -13,20 +13,25 @@
 		document.querySelector("main").focus();
 	};
 
-	// Pinning keeps the sidebar open and pushes the page content over; remembered across visits
+	// Pinning keeps the sidebar open and pushes the page content over; remembered across visits. The state lives as a
+	// class on <html>, which app.html sets before the first paint, so a pinned sidebar is open from the start
 	let pinned = $state(false);
 	let pinHovered = $state(false);
-	let pinIcon = $derived(pinned ? (pinHovered ? 'pin-pinned-hover' : 'pin-pinned') : (pinHovered ? 'pin-unpinned-hover' : 'pin-unpinned'));
+	let hoverSuffix = $derived(pinHovered ? '-hover' : '');
 
-	onMount(() => { pinned = localStorage.getItem('sidebarPinned') === 'true'; });
+	onMount(() => {
+		pinned = localStorage.getItem('sidebarPinned') === 'true';
+		document.documentElement.classList.toggle('sidebarPinned', pinned);
+	});
 
 	function togglePin() {
 		pinned = !pinned;
 		localStorage.setItem('sidebarPinned', pinned);
+		document.documentElement.classList.toggle('sidebarPinned', pinned);
 	}
 </script>
 
-<nav class:pinned>
+<nav>
 	<a onclick={focusMainContent} id="skipToContent" href="#content">
 		Skip to content
 	</a>
@@ -70,6 +75,8 @@
 		aria-pressed={pinned}
 		aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
 	>
-		<img src="/media/icons/{pinIcon}.png" alt="" class="noImgStyle">
+		<!-- Both icons are in the page and CSS shows the right one, so it is correct before the app loads -->
+		<img src="/media/icons/pin-pinned{hoverSuffix}.png" alt="" class="noImgStyle pinIconPinned">
+		<img src="/media/icons/pin-unpinned{hoverSuffix}.png" alt="" class="noImgStyle pinIconUnpinned">
 	</button>
 </nav>

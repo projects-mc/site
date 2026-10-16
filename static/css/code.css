@@ -1,82 +1,159 @@
-/* Code page: a file list beside a plain text editor */
-.code {
+/* Code page: a VS Code style workbench. File tree on the left, tabs over a Monaco editor on the right */
+.codeWorkbench {
 	display: flex;
-	gap: 16px;
-	align-items: flex-start;
+	/* Fills the window below the page's top margin, leaving the footer just out of view */
+	height: calc(100vh - 140px);
+	min-height: 480px;
+	background-color: var(--darkest1);
+	--pixelBorder: var(--lightest3);
 }
 
-.codeFiles {
-	flex: 0 0 360px;
-	padding: 8px 12px;
+/* Explorer */
+.codeExplorer {
+	flex: 0 0 300px;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
 	background-color: var(--darkest2);
+	border-right: var(--pc) solid var(--darkest4);
 }
-.codeFiles ul {
-	list-style: none;
-	padding: 0;
-	margin: 8px 0 0;
-}
-.codeFiles li {
+.codeExplorerHeader {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
+	padding: 6px 8px;
+	border-bottom: var(--pc) solid var(--darkest4);
 }
-.codeFiles li.open .codeEntry {
-	color: var(--blue2);
-}
-
-.codePath {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-}
-.codePath button,
-.codeEntry {
-	background: none;
-	padding: 2px 4px;
-	text-align: left;
-}
-.codeEntry {
+.codeTitle {
 	flex: 1;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	color: var(--blue2);
+}
+.codeTree {
+	flex: 1;
+	overflow: auto;
+	margin: 0;
+	padding: 4px 0;
+}
+.codeTree,
+.codeTree ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
-.codeActions {
+.codeRow {
 	display: flex;
-	gap: 8px;
-	margin-top: 8px;
+	align-items: center;
+	padding-left: calc(var(--depth) * 16px);
+}
+.codeRow:hover {
+	background-color: var(--darkest3);
+}
+.codeRow.active {
+	background-color: var(--darkest4);
+}
+.codeTwisty {
+	display: inline-block;
+	width: 16px;
+	color: var(--darkest4);
 }
 
-.codeSize {
+/* Bare text buttons: tree rows, row actions and tabs drop the site's pixel button look to stay dense */
+:is(.codeEntry, .codeRowAction, .codeTab button) {
+	min-width: 0;
+	margin: 0;
+	padding: 2px 6px;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+	clip-path: none;
 	color: var(--lightest3);
-	font-size: 14px;
+	font-size: 16px;
+	line-height: 24px;
+}
+.codeEntry {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-align: left;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.codeRowAction:hover,
+.codeTab button:hover {
+	color: var(--lightest1);
+	background: none;
+}
+/* Rename and delete only show on the row under the pointer */
+.codeRow .codeRowAction {
+	visibility: hidden;
+}
+.codeRow:is(:hover, :focus-within) .codeRowAction {
+	visibility: visible;
 }
 
-.codeEditor {
+/* Tabs and editor */
+.codeMain {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
-	padding: 8px 12px;
-	background-color: var(--darkest2);
 }
-.codeEditor header {
+.codeTabs {
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
+	overflow-x: auto;
+	scrollbar-width: thin;
+	background-color: var(--darkest2);
+	min-height: 32px;
 }
-.codeEditor textarea {
-	margin: 8px 0 0;
-	height: 65vh;
-	max-height: none;
-	font-family: 'Iosevka', monospace;
-	font-size: 16px;
-	tab-size: 4;
-	white-space: pre;
+.codeTab {
+	display: flex;
+	align-items: center;
+	border-right: var(--pc) solid var(--darkest1);
+	white-space: nowrap;
+}
+.codeTab.active {
+	background-color: var(--darkest1);
+	box-shadow: inset 0 var(--pc) 0 var(--blue2);
+}
+.codeTab.active button {
 	color: var(--lightest1);
+}
+.codeTabClose {
+	padding: 2px 8px 2px 0 !important;
+}
+
+.codeEditorArea {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+}
+.codeEditor {
+	position: absolute;
+	inset: 0;
+}
+.codeEmpty {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	padding: 48px;
+	text-align: center;
+	color: var(--lightest3);
+	background-color: var(--darkest1);
 }
 
 .codeError {
+	margin: 0;
+	padding: 4px 12px;
 	color: var(--red);
+	border-top: var(--pc) solid var(--darkest4);
+}
+
+/* Monaco draws its own text: keep the site-wide text shadow off it */
+.codeEditor .monaco-editor {
+	text-shadow: none;
 }

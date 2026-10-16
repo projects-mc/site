@@ -1,10 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-US">
 	<head>
-		<meta charset="UTF-8" />
-		<link rel="icon" href="/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="color-scheme" content="dark light" />
+		<meta charset="UTF-8"/>
+		<link rel="icon" href="/favicon.png"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<meta name="color-scheme" content="dark"/>
+		<!-- Monocraft is the font for nearly everything; fetching it with the page means text never redraws in a fallback
+		     font first -->
+		<link rel="preload" href="/fonts/monocraft-regular.woff2" as="font" type="font/woff2" crossorigin/>
+		<script>
+			// Runs before the first paint, so the sidebar starts in its final state instead of shifting once the app loads:
+			// hidden for logged-out visitors, open if it was pinned
+			if (!localStorage.getItem('session')) document.documentElement.classList.add('loggedOut');
+			else if (localStorage.getItem('sidebarPinned') === 'true') document.documentElement.classList.add('sidebarPinned');
+		</script>
 		%sveltekit.head%
 	</head>
 	<body>

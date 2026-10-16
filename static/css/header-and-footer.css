@@ -56,6 +56,12 @@ nav {
 #playerhead img {
 	zoom: calc(var(--scale) * 2);
 }
+
+/* Small drop shadow on the logo and player head. Lengths are in art pixels, since zoom scales them like the image */
+:is(#logo, #playerhead) img {
+	filter: drop-shadow(1px 1px 0 rgb(0 0 0 / 0.35));
+}
+
 #playerhead {
 	display: flex;
 	text-decoration: none;
@@ -88,12 +94,12 @@ nav {
 	transition: opacity var(--navSpeed) var(--navEase);
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) #pin {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) #pin {
 	opacity: 1;
 	pointer-events: auto;
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) #playerhead {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) #playerhead {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -102,7 +108,7 @@ nav:is(:hover, :has(:focus-visible), .pinned) #playerhead {
 main #content {
 	transition: padding-left var(--navSpeed) var(--navEase);
 }
-nav.pinned ~ main #content {
+:root.sidebarPinned nav ~ main #content {
 	padding-left: calc(var(--navOpen) + 16px);
 }
 
@@ -117,7 +123,7 @@ nav.pinned ~ main #content {
 	align-content: space-between;
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) .navItems {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .navItems {
 	transform: translateX(0);
 	pointer-events: unset;
 	visibility: unset;
@@ -137,20 +143,20 @@ nav:is(:hover, :has(:focus-visible), .pinned) .navItems {
 		left var(--navSpeed) var(--navEase);
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) .external {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .external {
 	opacity: 1;
 	left: 0;
 }
 
 nav p {
 	opacity: 0;
-	transform: translateX(-40px);
+	transform: translateX(-48px); /* 12 art pixels, so every --navEase frame lands on a whole one */
 	transition:
 		opacity var(--navSpeed) var(--navEase),
 		transform var(--navSpeed) var(--navEase);
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) p {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) p {
 	opacity: 1;
 	transform: translateX(0);
 }
@@ -202,7 +208,7 @@ nav a.active img {
 	pointer-events: none;
 	transition: opacity var(--navSpeed) var(--navEase);
 }
-nav:is(:hover, :has(:focus-visible), .pinned) #instance {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) #instance {
 	opacity: 1;
 	pointer-events: auto;
 }
@@ -233,7 +239,7 @@ nav:is(:hover, :has(:focus-visible), .pinned) #instance {
 	align-items: center;
 	justify-content: space-evenly;
 }
-nav:is(:hover, :has(:focus-visible), .pinned) .instanceCompact {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceCompact {
 	opacity: 0;
 }
 
@@ -280,7 +286,7 @@ nav:is(:hover, :has(:focus-visible), .pinned) .instanceCompact {
 	right: 0;
 	z-index: 5;
 }
-nav:not(:hover, :has(:focus-visible), .pinned) .instanceMenu {
+nav:not(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceMenu {
 	display: none; /* closing the sidebar hides it with the rest of the box */
 }
 .instanceList {
@@ -367,7 +373,7 @@ nav:before {
 	z-index: -1;
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) ~ main footer {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) ~ main footer {
 	margin-left: var(--navOpen);
 }
 
@@ -406,7 +412,7 @@ footer p, footer a {
 }
 
 /* Navigation open on hover */
-nav:is(:hover, :has(:focus-visible), .pinned) {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) {
 	width: var(--navOpen);
 	padding: 8px;
 	min-width: var(--navOpen);
@@ -414,9 +420,7 @@ nav:is(:hover, :has(:focus-visible), .pinned) {
 
 nav ul ul {
 	max-height: 0px;
-	transition:
-		max-height var(--navSpeed) var(--navEase),
-		margin-bottom var(--navSpeed) var(--navEase);
+	transition: max-height var(--navSpeed) var(--navEase); /* margin snaps: 10px isn't a whole pixel per frame */
 	overflow: hidden;
 	padding-left: 10px;
 
@@ -425,8 +429,8 @@ nav ul ul {
 	white-space: nowrap;
 }
 
-nav:is(:hover, :has(:focus-visible), .pinned) .navGroup.open ul {
-	max-height: 240px; /* room for the section's pages; animates open */
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .navGroup.open ul {
+	max-height: 256px; /* room for the section's pages; animates open */
 	margin-bottom: 10px;
 }
 
@@ -465,12 +469,6 @@ button.navGroupToggle:hover {
 	transition: opacity var(--navSpeed) var(--navEase);
 }
 
-/* Opening animates with --ease; leaving this state falls back to the root's --easeReverse */
-nav:is(:hover, :has(:focus-visible), .pinned),
-nav:is(:hover, :has(:focus-visible), .pinned) ~ main {
-	--navEase: var(--ease);
-}
-
 /* Pages inside a section are marked in blue; the white selected box belongs to the section header */
 nav .navGroup ul a.active,
 nav .navGroup ul a.active p {
@@ -489,7 +487,7 @@ nav .navGroup ul a.active p {
 .navGroup.current .navGroupToggle img {
 	filter: url(#tintActive);
 }
-nav:is(:hover, :has(:focus-visible), .pinned) .navGroupToggle .dropdownArrow {
+nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .navGroupToggle .dropdownArrow {
 	opacity: 1;
 }
 
@@ -533,4 +531,44 @@ button.navGroupToggle:hover p {
 /* Closed sidebar's status light: corner pixels knocked off, a rounded pixel dot */
 .instanceCompact .statusLight {
 	clip-path: var(--pixelCorners);
+}
+
+/* Homepage and logged-out pages have no sidebar: footer spans the full width with no corner piece. :root.loggedOut is
+   set before the first paint (app.html), so a logged-out visitor never sees the sidebar flash in */
+:root.loggedOut nav {
+	display: none;
+}
+:is(.noSidebar, :root.loggedOut) footer {
+	margin-left: 0;
+	padding-left: 16px;
+}
+:is(.noSidebar, :root.loggedOut) footer::before {
+	content: none;
+}
+
+/* Sidebar and footer texture overlays, over everything inside them. The sidebar's is fixed rather than absolute so
+   it keeps covering the whole height when the sidebar scrolls; it follows the sidebar's width as it opens */
+nav::after,
+footer::after {
+	content: '';
+	pointer-events: none;
+	background: var(--sidebarTexture);
+	z-index: 10;
+}
+nav::after {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: inherit;
+}
+footer::after {
+	position: absolute;
+	inset: 0;
+}
+
+/* Pin icon matching the pinned state on <html> */
+:root.sidebarPinned .pinIconUnpinned,
+:root:not(.sidebarPinned) .pinIconPinned {
+	display: none;
 }

@@ -2,24 +2,35 @@
 <script>
 	import Header from '#lib/components/header.svelte';
 	import Footer from '#lib/components/footer.svelte';
+	import Home from '#lib/components/home.svelte';
 	import { navItems } from '#lib/config';
-	import { session, currentInstance, refresh } from '#lib/session.svelte.js';
+	import { session, currentInstance, refresh, restore } from '#lib/session.svelte.js';
 	import { preloadCode } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { fade } from 'svelte/transition';
 	import { page } from '$app/state';
 	let { children } = $props();
-
-	// Delays and fadeouts are glitchy atm ;(
-	const transitionIn = { duration: 150 };
 
 	// Pages about one instance need a login and an instance; the rest (home, login, legal) don't
 	const instancePages = navItems.map((item) => item.route);
 	let needsInstance = $derived(instancePages.some((route) => page.url.pathname.startsWith(route)));
 
+	// Logged out, every page but these shows the homepage; the homepage itself never has the sidebar
+	const publicPages = ['/login', '/privacy', '/terms'];
+	let loggedOut = $derived(session.loaded && !session.user);
+	let isHome = $derived(page.url.pathname === '/');
+	let showHome = $derived(isHome || (loggedOut && !publicPages.some((route) => page.url.pathname.startsWith(route))));
+	let noSidebar = $derived(isHome || loggedOut);
+
+	// app.html guesses logged-out from the stored token before the first paint; keep that class right once the session
+	// is actually known (logging in, or a token the server no longer accepts)
+	$effect(() => {
+		if (session.loaded) document.documentElement.classList.toggle('loggedOut', loggedOut);
+	});
+
 	onMount(() => {
 		// Prefetch all top-level routes for better speed
 		preloadCode(...instancePages);
+		restore();
 		refresh();
 		// Keeps state, players and memory current; skipped while the tab is hidden
 		const timer = setInterval(() => { if (!document.hidden) refresh(); }, 5000);
@@ -46,18 +57,19 @@
 	</filter>
 </svg>
 
-<div class="layout">
-	<Header/>
+<div class="layout" class:noSidebar>
+	{#if !noSidebar}
+		<Header/>
+	{/if}
 	{#key page.url.pathname}
-		<main tabindex="-1" in:fade|local={transitionIn}>
+		<main tabindex="-1">
 			<div id="content">
-				{#if !needsInstance}
+				{#if showHome}
+					<Home/>
+				{:else if !needsInstance}
 					{@render children?.()}
 				{:else if !session.loaded}
-					<p>Loading...</p>
-				{:else if !session.user}
-					<h1>Log in</h1>
-					<p>Join <code>playboardmc.com</code> in Minecraft and type <code>/dashboard</code> in the lobby.</p>
+					<!-- Blank until the session is known; only the prerendered HTML and a first-ever login sit here -->
 				{:else if !currentInstance()}
 					<h1>No servers yet</h1>
 					<p>Make one with <b>New</b> in the server box on the left.</p>
