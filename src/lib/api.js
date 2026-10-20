@@ -47,6 +47,8 @@ export const api = {
 		localStorage.removeItem(TOKEN_KEY);
 	},
 	me: () => json('GET', '/me'),
+	// Live updates: see connectEvents in session.svelte.js
+	events: () => new WebSocket(link('/events').replace(/^http/, 'ws')),
 
 	instances: () => json('GET', '/instances'),
 	create: (name) => json('POST', '/instances', { json: { name } }),

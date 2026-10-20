@@ -18,7 +18,9 @@
 	let error = $state('');
 
 	let monaco, editor, host;
-	const models = new Map(); // path -> { model, savedVersion }
+	// path -> { model, savedVersion }; Monaco owns the models, nothing renders from this map
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const models = new Map();
 	const join = (...parts) => parts.filter(Boolean).join('/');
 	const parentOf = (path) => path.split('/').slice(0, -1).join('/');
 	const baseName = (path) => path.split('/').pop();

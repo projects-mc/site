@@ -32,8 +32,9 @@
 		preloadCode(...instancePages);
 		restore();
 		refresh();
-		// Keeps state, players and memory current; skipped while the tab is hidden
-		const timer = setInterval(() => { if (!document.hidden) refresh(); }, 5000);
+		// aspen pushes state, players and memory while the live connection is up; without it, poll (and reconnect).
+		// Skipped while the tab is hidden
+		const timer = setInterval(() => { if (!document.hidden && !session.live) refresh(); }, 5000);
 		return () => clearInterval(timer);
 	});
 </script>

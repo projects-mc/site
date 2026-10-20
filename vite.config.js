@@ -54,6 +54,12 @@ const config = {
 	plugins: [aseprite(), sveltekit({ adapter: adapter({ fallback: '404.html' }) })],
 	build: {
 		target: 'es2020'
+	},
+	// bun run test: unit tests next to the code they test (*.test.js), with a fake browser from src/test-setup.js
+	test: {
+		include: ['src/**/*.test.js'],
+		environment: 'node',
+		setupFiles: ['src/test-setup.js']
 	}
 };
 

@@ -1,6 +1,6 @@
 <script>
 	import Title from '#lib/components/title.svelte';
-	import { currentInstance } from '#lib/session.svelte.js';
+	import { currentInstance, readStored } from '#lib/session.svelte.js';
 	import { api } from '#lib/api';
 
 	// Pulls a git branch into the server's files. The repository and branch are remembered per server in this browser
@@ -11,7 +11,7 @@
 	let pulling = $state(false);
 
 	$effect(() => {
-		const saved = JSON.parse(localStorage.getItem(`git:${name}`) ?? '{}');
+		const saved = readStored(`git:${name}`, {});
 		url = saved.url ?? '';
 		branch = saved.branch ?? 'main';
 		output = '';

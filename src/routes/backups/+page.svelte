@@ -3,7 +3,7 @@
 	import HistoryList from '#lib/components/historyList.svelte';
 	import IconButton from '#lib/components/iconButton.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
-	import { currentInstance, act } from '#lib/session.svelte.js';
+	import { currentInstance, act, onBackupsChanged } from '#lib/session.svelte.js';
 	import { api } from '#lib/api';
 	import { isoFromUnix, formatBytes } from '#lib/format';
 
@@ -13,6 +13,8 @@
 	let busy = $state(false);
 
 	$effect(() => { load(name); });
+	// A backup made elsewhere (the automatic one when the server stops, another tab) shows up straight away
+	$effect(() => onBackupsChanged((instance) => { if (instance === name) load(name); }));
 
 	async function load(instance) {
 		const list = await api.backups(instance).catch(() => []);

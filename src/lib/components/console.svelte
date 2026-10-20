@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import LogLines from '#lib/components/logLines.svelte';
+	import { readStored } from '#lib/session.svelte.js';
 
 	// running: the server is up, so the prompt is / (a command) rather than >
 	// oncommand: called with each command typed
@@ -58,7 +59,8 @@
 	let historyAt = 0;
 	let draft = '';
 	onMount(() => {
-		history = JSON.parse(localStorage.getItem('consoleHistory') ?? '[]');
+		const stored = readStored('consoleHistory', []);
+		history = Array.isArray(stored) ? stored : [];
 		historyAt = history.length;
 	});
 
