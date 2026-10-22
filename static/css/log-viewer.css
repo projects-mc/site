@@ -47,20 +47,6 @@
 	color: var(--lightest3);
 }
 
-/* A red pixel cross */
-button.logViewerClose {
-	padding: 0 8px;
-	border: 0;
-	background: none;
-	clip-path: none;
-	color: var(--red);
-	font-size: 36px;
-	line-height: 1;
-}
-button.logViewerClose:hover {
-	color: var(--lightest1);
-}
-
 .logViewerBody {
 	flex: 1;
 	overflow-y: auto;

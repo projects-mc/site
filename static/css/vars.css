@@ -24,9 +24,8 @@
 	--blue4: #88c0d0; /* brightest Nord blue, for small accents that must read as blue */
 
 	/* Fonts */
-	--headerFont: 'Monocraft', 'Hammersmith One', Roboto, Helvetica, Arial, sans-serif;
-	--primaryFont: 'Monocraft', 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
-		sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+	--headerFont: 'Monocraft', monospace;
+	--primaryFont: 'Monocraft', monospace, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
 
 	/* Sidebar widths: closed fits the 64px logo and the summary box's "42%" (32px icon + 36px text) */
 	--navClosed: 96px;
@@ -46,10 +45,19 @@
 	   exception: Monocraft stays at 18px (2px pixels) to stay a normal reading size */
 	--scale: 4;
 
-	/* Texture overlays laid over everything like a shader: 16x16 tiles, transparent except light or dark specks.
-	   Fixed, so the sidebar and footer tiles line up with each other wherever they sit */
+	/* Textures: 16x16 tiles, transparent except light or dark specks. The sidebar's is laid over the sidebar and
+	   footer like a shader; the background's is only behind the page content. Fixed, so the sidebar and footer tiles line up with each other wherever they sit */
 	--sidebarTexture: url(/media/icons/sidebar-texture.png) 0 0 / calc(16 * var(--pc)) fixed;
 	--backgroundTexture: url(/media/icons/background-texture.png) 0 0 / calc(16 * var(--pc)) fixed;
+
+	/* Drop shadow for boxes, buttons and the selected tab: one art pixel down and right. Zoomed pixel art uses 1px
+	   instead (zoom scales it) */
+	--dropShadow: drop-shadow(var(--pc) var(--pc) 0 rgb(0 0 0 / 0.35));
+	--artDropShadow: drop-shadow(1px 1px 0 rgb(0 0 0 / 0.35));
+	/* The selected tab's white box with the corner pixels knocked off, as backgrounds so its shadow isn't clipped */
+	--selectedBox:
+		linear-gradient(var(--lightest1), var(--lightest1)) center / calc(100% - 2 * var(--pc)) 100% no-repeat,
+		linear-gradient(var(--lightest1), var(--lightest1)) center / 100% calc(100% - 2 * var(--pc)) no-repeat;
 
 	/* Clip shape that knocks one art pixel off each corner, for pixel art boxes */
 	--pc: calc(var(--scale) * 1px);

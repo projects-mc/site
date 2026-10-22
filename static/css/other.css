@@ -1,30 +1,13 @@
-/* Checkbox styling */
-
-input[type='checkbox'] {
-	cursor: pointer;
-	margin-left: 5px;
-	box-shadow: 0 1px 3px 0 var(--darkest1);
-}
-
-/* Inputs */
-textarea {
-	resize: none;
-	background: var(--darkest2);
-	border: 5px solid var(--darkest4);
-	box-shadow: 1px 1px 9px var(--darkest2);
-	border-radius: 5px;
-}
-
-input[type='range']:hover {
-	border: 2px solid var(--blue3);
-}
-
-::placeholder {
-	color: #cdcdcd;
-}
-
 a:hover {
 	text-decoration: underline;
+}
+
+/* Browsers turn the text shadow off in form controls: keep the site's */
+button,
+input,
+select,
+textarea {
+	text-shadow: inherit;
 }
 
 /* Buttons: flat pixel art boxes with notched corners */
@@ -39,129 +22,33 @@ button:hover {
 	background-color: var(--darkest4);
 }
 
-/* codeblocks */
-pre,
+/* Code: inline, a dark run with a one font pixel outline; blocks are pixel boxes (below) */
 :not(pre) > code {
-	/* Applied to small & large codeblocks */
+	padding: 0 calc(2 * var(--fontPixel));
 	background-color: var(--darkest2);
-	padding: 1px 5px 2px 5px;
-	border-radius: 5px;
-	border: 2px solid var(--darkest4);
+	border: var(--fontPixel) solid var(--darkest4);
 	color: var(--lightest1);
-	line-height: 23px;
-	transition:
-		color 0.2s ease,
-		background-color 0.2s ease,
-		border 0.2s ease,
-		box-shadow 0.2s ease;
 }
-
 pre {
-	/* Applied only to large codeblocks */
-	padding: 10px 8px 10px 8px;
+	margin: 0 0 10px;
+	padding: 10px 12px;
+	background-color: var(--darkest2);
+	color: var(--lightest1);
 	text-align: left;
-	box-shadow: 3px 6px 14px var(--darkest1);
-	margin-bottom: 10px;
 	overflow-x: auto;
 }
 
-/* Forms */
-
-input:not([type='range']),
-textarea {
-	padding: 10px;
-	background-color: var(--darkest3);
-	border-radius: 5px;
-	border: 0;
-	margin: 10px;
-	transition:
-		background-color 0.2s ease,
-		box-shadow 0.2s ease,
-		color 0.2s ease;
-	max-width: -webkit-fill-available;
-	max-height: 400px;
-	color: var(--complimentary);
-	box-shadow: 0 0 10px var(--darkest3);
+::placeholder {
+	color: var(--lightest3);
+	opacity: 0.5;
 }
 
-textarea {
-	min-width: 200px;
-	min-height: 100px;
-}
-
-label {
-	color: var(--complimentary);
-	transition: color 0.2s ease;
-}
-
-/* Subtext */
-sub {
-	color: var(--blue1);
-}
-sub a {
-	color: var(--blue2) !important;
-}
-
-
-/* Block quote styling */
-blockquote {
-	padding: 60px 80px 40px;
-	position: relative;
-	color: var(--lightest1);
-	transition:
-		color 0.2s ease,
-		padding 0.2s ease;
-	font-size: 36px;
-	text-align: center;
-}
-
-blockquote::before {
-	content: '“';
-	color: white;
-	position: absolute;
-	font-size: 252px;
-	left: 32px;
-	top: -48px;
-	transform: rotate(354deg);
-	filter: invert(50%) sepia(5%) saturate(2000%) hue-rotate(180deg) brightness(87%) blur(1px);
-	z-index: 0;
-}
-
-blockquote::after {
-	content: '';
-	bottom: 20px;
-	margin-left: -100px;
-	position: absolute;
-	border-bottom: 4px solid var(--blue2);
-	border-radius: 3px;
-	width: 200px;
-}
-
-blockquote p {
-	position: relative;
-	z-index: 1;
-}
-
-img:not(.noImgStyle),
-video:not(.noImgStyle) {
-	border-radius: 10px;
-	box-shadow:
-		8px 14px 38px var(--darkest2),
-		1px 3px 8px var(--darkest1);
-	border: 5px solid var(--darkest4);
-	transition:
-		border 0.2s ease,
-		box-shadow 0.2s ease;
-	width: 100%;
-}
-
+/* A one art pixel line */
 hr {
-	border-style: solid;
-	color: var(--darkest4);
-	border-width: 2px;
-	border-radius: 2px;
-	transition: color 0.2s ease;
-	height: 0;
+	height: var(--pc);
+	margin: 16px 0;
+	border: 0;
+	background: var(--darkest4);
 }
 
 /* Scrollbars: a square Nord blue line, two art pixels wide, with one art pixel of margin all round */
@@ -232,21 +119,97 @@ hr {
 }
 
 /* Pixel art box: one art pixel border with the corner pixels knocked off and the pixel inside each corner
-   filled, so the outline steps diagonally. Recolour the outline with --pixelBorder; set background-color,
-   not the background shorthand, or the corner fill is lost */
+   filled, so the outline steps diagonally. Drawn with background layers rather than clipped, so the drop shadow
+   isn't cut off: the four edges stop short of the corners, the background colour stays inside the border, and the
+   corner fills go last. Recolour the outline with --pixelBorder; set background-color, not the background
+   shorthand, or the outline is lost. The layers are also variables, for boxes that add one of their own (select) */
 .pixelBox,
-button {
+button,
+pre,
+.field,
+input:not([type='checkbox'], [type='radio'], [type='range']),
+select,
+textarea {
 	--pixelBorder: var(--darkest4);
-	border: var(--pc) solid var(--pixelBorder);
-	clip-path: var(--pixelCorners);
-	background-image:
-		linear-gradient(var(--pixelBorder), var(--pixelBorder)),
-		linear-gradient(var(--pixelBorder), var(--pixelBorder)),
-		linear-gradient(var(--pixelBorder), var(--pixelBorder)),
-		linear-gradient(var(--pixelBorder), var(--pixelBorder));
-	background-size: var(--pc) var(--pc);
-	background-position: top left, top right, bottom left, bottom right;
+	--edge: linear-gradient(var(--pixelBorder), var(--pixelBorder));
+	--pixelImages: var(--edge), var(--edge), var(--edge), var(--edge), var(--edge), var(--edge), var(--edge), var(--edge);
+	--pixelSizes:
+		calc(100% - 2 * var(--pc)) var(--pc), calc(100% - 2 * var(--pc)) var(--pc),
+		var(--pc) calc(100% - 2 * var(--pc)), var(--pc) calc(100% - 2 * var(--pc)),
+		var(--pc) var(--pc), var(--pc) var(--pc), var(--pc) var(--pc), var(--pc) var(--pc);
+	--pixelPositions:
+		top, bottom, left, right,
+		left var(--pc) top var(--pc), right var(--pc) top var(--pc),
+		left var(--pc) bottom var(--pc), right var(--pc) bottom var(--pc);
+	--pixelClips: border-box, border-box, border-box, border-box, border-box, border-box, border-box, padding-box;
+	border: var(--pc) solid transparent;
+	border-radius: 0;
+	background-image: var(--pixelImages);
+	background-size: var(--pixelSizes);
+	background-position: var(--pixelPositions);
+	background-origin: border-box;
+	background-clip: var(--pixelClips);
 	background-repeat: no-repeat;
+	filter: var(--dropShadow);
+}
+
+/* Text fields: sunken pixel boxes darker than the page, with a hard shadow one art pixel deep along the inside top
+   and left. The outline turns blue while one has focus. .field gives the look to an editable element of our own */
+.field,
+input:not([type='checkbox'], [type='radio'], [type='range']),
+select,
+textarea {
+	margin: 4px;
+	padding: 6px 10px;
+	max-width: 100%;
+	font: inherit;
+	color: var(--lightest1);
+	background-color: var(--darkest1);
+	box-shadow: inset var(--pc) var(--pc) 0 rgb(0 0 0 / 0.35);
+	filter: none;
+}
+:is(.field, input, select, textarea):is(:focus, :focus-visible) {
+	--pixelBorder: var(--blue2);
+	box-shadow: inset var(--pc) var(--pc) 0 rgb(0 0 0 / 0.35);
+}
+textarea {
+	resize: none;
+}
+/* No browser spinner on number fields */
+input[type='number'] {
+	appearance: textfield;
+}
+input::-webkit-inner-spin-button,
+input::-webkit-outer-spin-button {
+	appearance: none;
+}
+option {
+	background-color: var(--darkest1);
+	color: var(--lightest1);
+}
+/* The pixel dropdown arrow in place of the browser's */
+select {
+	appearance: none;
+	padding-right: calc(10 * var(--pc));
+	cursor: pointer;
+	background-image: url(/media/icons/dropdown-arrow.png), var(--pixelImages);
+	background-size: calc(5 * var(--pc)) calc(3 * var(--pc)), var(--pixelSizes);
+	background-position: right calc(3 * var(--pc)) center, var(--pixelPositions);
+	background-clip: border-box, var(--pixelClips);
+}
+
+/* A red pixel cross that closes a dialog (log viewer, modals) */
+button.closeButton {
+	padding: 0 8px;
+	border: 0;
+	background: none;
+	text-shadow: none; /* the drop shadow is the cross's shadow */
+	color: var(--red);
+	font-size: 36px;
+	line-height: 1;
+}
+button.closeButton:hover {
+	color: var(--lightest1);
 }
 
 /* Square pixel art icon button */

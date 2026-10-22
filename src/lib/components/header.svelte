@@ -38,14 +38,13 @@
 
 	<div id="sidebarTop">
 		<a href={resolve('/')} id="logo">
-			<img src="/media/icons/playboard.png" alt="Playboard logo" class="noImgStyle">
+			<img src="/media/icons/playboard.png" alt="Playboard logo">
 		</a>
 		<div id="playerhead">
 			<!-- The player's own face (8x8) once logged in -->
 			<img
 				src={session.user ? `https://mc-heads.net/avatar/${session.user.id}/8` : '/media/icons/player-head.png'}
 				alt={session.user ? `${session.user.name}'s head` : ''}
-				class="noImgStyle"
 			>
 		</div>
 	</div>
@@ -76,7 +75,7 @@
 		aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar'}
 	>
 		<!-- Both icons are in the page and CSS shows the right one, so it is correct before the app loads -->
-		<img src="/media/icons/pin-pinned{hoverSuffix}.png" alt="" class="noImgStyle pinIconPinned">
-		<img src="/media/icons/pin-unpinned{hoverSuffix}.png" alt="" class="noImgStyle pinIconUnpinned">
+		<img src="/media/icons/pin-pinned{hoverSuffix}.png" alt="" class="pinIconPinned">
+		<img src="/media/icons/pin-unpinned{hoverSuffix}.png" alt="" class="pinIconUnpinned">
 	</button>
 </nav>

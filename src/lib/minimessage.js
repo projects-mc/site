@@ -98,7 +98,8 @@ export function preview(source) {
 		const lower = tag.toLowerCase();
 		if (lower === 'br' || lower === 'newline') newLine();
 		else if (lower === 'reset') stack = [stack[0]];
-		else if (lower.startsWith('sprite:') || lower.startsWith('head:')) add({ sprite: tag.slice(tag.indexOf(':') + 1) }, 1);
+		else if (lower.startsWith('head:')) add({ sprite: tag.slice(5), head: headId(tag.slice(5)) }, 1);
+		else if (lower.startsWith('sprite:')) add({ sprite: tag.slice(tag.indexOf(':') + 1) }, 1);
 		else if (tag.startsWith('/')) {
 			const name = tag.slice(1).split(':')[0].toLowerCase();
 			// </> closes the innermost tag
@@ -125,6 +126,24 @@ export function preview(source) {
 	}
 	return { lines, clipped };
 }
+
+// Whose face a <head:...> shows: a player's name or UUID, or for a texture value (base64 JSON) its skin's hash.
+// null if the texture can't be read
+export function headId(arg) {
+	const value = arg.split(':')[0].replace(/^["']|["']$/g, '');
+	if (value.length <= 36) return value;
+	try {
+		const url = JSON.parse(atob(value)).textures.SKIN.url;
+		return url.slice(url.lastIndexOf('/') + 1);
+	} catch {
+		return null;
+	}
+}
+export const headImage = (id) => `https://mc-heads.net/avatar/${encodeURIComponent(id)}/8`;
+
+// Whole <head:...> tags: the editor shows each as just the face. Not one escaped with a backslash (\<head:...>),
+// which the game shows as text; an escaped backslash before it (\\<head:...>) doesn't count
+export const HEAD_TAG = /(?<=(?:^|[^\\])(?:\\\\)*)<head:[^<>]+>/gi;
 
 // The editor shows one line per row; the file keeps them on one line with <br> between
 export const toRows = (motd) => (motd ?? '').split(/<br>|<newline>/i).join('\n');

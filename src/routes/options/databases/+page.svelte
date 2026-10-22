@@ -123,6 +123,7 @@
 	button.link {
 		background: none;
 		border: none;
+		filter: none;
 		padding: 0;
 		color: var(--blue4);
 		cursor: pointer;

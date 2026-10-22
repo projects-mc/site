@@ -87,7 +87,7 @@
 				>
 				{#if query}<span class="logViewerCount">{matchCount ? current + 1 : 0}/{matchCount}</span>{/if}
 			</div>
-			<button class="logViewerClose" onclick={() => dialog.close()} aria-label="Close log">&times;</button>
+			<button class="closeButton" onclick={() => dialog.close()} aria-label="Close log">&times;</button>
 		</header>
 		<div class="logViewerBody" bind:this={body}>
 			<LogLines {log} {query}/>

@@ -69,3 +69,7 @@ img[src^="/media/icons/"][src$=".png"] {
 	max-width: none;
 	height: auto;
 }
+/* Shadowed like the rest of the pixel art; :where so tints elsewhere can add to it */
+:where(img[src^="/media/icons/"][src$=".png"]) {
+	filter: var(--artDropShadow);
+}

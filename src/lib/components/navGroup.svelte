@@ -18,10 +18,10 @@
 		aria-expanded={open}
 		aria-disabled={hasCurrentPage}
 	>
-		<img src="/media/icons/{title.toLowerCase()}.png" alt="" class="noImgStyle">
+		<span class="navIcon"><img src="/media/icons/{title.toLowerCase()}.png" alt=""></span>
 		<span class="navGroupLabel">
 			<p>{title}</p>
-			<img src="/media/icons/dropdown-arrow.png" alt="" class="noImgStyle dropdownArrow" class:open>
+			<span class="navIcon"><img src="/media/icons/dropdown-arrow.png" alt="" class="dropdownArrow" class:open></span>
 		</span>
 	</button>
 	<ul>

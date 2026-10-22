@@ -19,13 +19,13 @@
 		target={external ? "_blank" : ''}
 		rel={external ? "noopener noreferrer" : ''}
 	>
-		<img class="noImgStyle" 
-			src="/media/icons/{icon}.png" 
+		<span class="navIcon"><img
+			src="/media/icons/{icon}.png"
 			alt=""
-		/>
+		/></span>
 		{@render children?.()}
 		{#if external}
-			<img class="noImgStyle external" src="/media/icons/external.svg" alt="External icon"/>
+			<img class="external" src="/media/icons/external.svg" alt="External icon"/>
 		{/if}
 	</a>
 </li>

@@ -36,8 +36,8 @@
 	<!-- Closed sidebar: just the numbers and a status light, in the space the full box keeps -->
 	<div class="instanceCompact pixelBox" class:statusOnly={!showStats} aria-hidden="true">
 		{#if showStats}
-			<span><img src="/media/icons/players.png" alt="" class="noImgStyle">{instance.players}</span>
-			<span><img src="/media/icons/memory.png" alt="" class="noImgStyle">{memory}%</span>
+			<span><img src="/media/icons/players.png" alt="">{instance.players}</span>
+			<span><img src="/media/icons/memory.png" alt="">{memory}%</span>
 		{/if}
 		<span class="statusLight" class:running></span>
 	</div>
@@ -46,7 +46,7 @@
 	<div id="instance" class="pixelBox">
 		<button class="instanceToggle" bind:offsetHeight={toggleHeight} onclick={() => open = !open} aria-expanded={open}>
 			<span>{instance?.name ?? 'No servers'}</span>
-			<img src="/media/icons/dropdown-arrow.png" alt="" class="noImgStyle dropdownArrow" class:open>
+			<img src="/media/icons/dropdown-arrow.png" alt="" class="dropdownArrow" class:open>
 		</button>
 
 		{#if instance}
@@ -54,11 +54,11 @@
 				{#if showStats}
 					<div class="instanceStats">
 						<span title="Players online">
-							<img src="/media/icons/players.png" alt="Players" class="noImgStyle">
+							<img src="/media/icons/players.png" alt="Players">
 							{instance.players}
 						</span>
 						<span title="Memory usage">
-							<img src="/media/icons/memory.png" alt="Memory" class="noImgStyle">
+							<img src="/media/icons/memory.png" alt="Memory">
 							{memory}%
 						</span>
 					</div>
@@ -78,7 +78,7 @@
 					{/if}
 				{/each}
 				<button onclick={create}>
-					<img src="/media/icons/new.png" alt="" class="noImgStyle">
+					<img src="/media/icons/new.png" alt="">
 					New
 				</button>
 			</div>

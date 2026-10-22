@@ -21,22 +21,13 @@ main {
 	min-height: calc(100vh - 96px - 64px);
 }
 
-img:not(.noImgStyle) {
-	width: 100%;
-	max-width: 100%;
-	height: auto;
-	background-color: var(--darkest3);
-	border: 2px var(--darkest4) solid;
-	border-radius: 8px;
-	box-shadow: 1px 1px 6px var(--darkest1);
-}
-
 body {
 	margin: 0;
 	min-height: 100vh;
 	color: var(--lightest2);
 	font-family: var(--primaryFont);
-	background: var(--darkest1);
+	/* The texture is only behind the page: buttons, boxes and text sit on top of it */
+	background: var(--backgroundTexture), var(--darkest1);
 	-moz-osx-font-smoothing: grayscale;
 	-webkit-font-smoothing: antialiased;
 }
@@ -46,23 +37,13 @@ html {
 	-webkit-tap-highlight-color: transparent;
 }
 
-/* Overscroll past the page edges shows the root's background: match the sidebar and footer.
-   Setting it on html stops body's background spreading there, so body keeps the content colour */
+/* No rubber band past the page edges. Where a browser still shows one, the root's background matches the sidebar
+   and footer, texture included. Setting it on html stops body's background spreading there */
 html {
-	background: var(--darkest2);
+	overscroll-behavior: none;
+	background: var(--sidebarTexture), var(--darkest2);
 }
 
 :is(.noSidebar, :root.loggedOut) #content {
 	padding-left: 15px;
-}
-
-/* Texture overlay for the page content, over everything in it (buttons, boxes, text) but under the sidebar and
-   footer, which are stacked above it with their own texture. Clicks pass straight through */
-.layout::after {
-	content: '';
-	position: fixed;
-	inset: 0;
-	z-index: 2;
-	pointer-events: none;
-	background: var(--backgroundTexture);
 }

@@ -1,7 +1,11 @@
 nav {
 	font-family: var(--primaryFont);
 	padding: 8px;
-	background-color: var(--darkest2);
+	/* The texture is only on the background, under the tabs and boxes; the bevel along the top scrolls with them */
+	background:
+		var(--sidebarTexture),
+		url(/media/icons/sidebar-top.png) 0 0 / calc(48 * var(--pc)) calc(6 * var(--pc)) no-repeat local,
+		var(--darkest2);
 }
 
 :where(nav, footer) a {
@@ -38,6 +42,7 @@ nav {
 	   closed width */
 	overflow-x: hidden;
 	overflow-y: auto;
+	overscroll-behavior: none; /* no rubber band at its top or bottom */
 	scrollbar-width: none;
 	display: flex;
 	flex-direction: column;
@@ -59,7 +64,7 @@ nav {
 
 /* Small drop shadow on the logo and player head. Lengths are in art pixels, since zoom scales them like the image */
 :is(#logo, #playerhead) img {
-	filter: drop-shadow(1px 1px 0 rgb(0 0 0 / 0.35));
+	filter: var(--artDropShadow);
 }
 
 #playerhead {
@@ -82,7 +87,7 @@ nav {
 	border-radius: 0;
 	background: none;
 	box-shadow: none;
-	clip-path: none;
+	filter: none;
 	transition: opacity var(--navSpeed) var(--navEase);
 }
 
@@ -181,14 +186,24 @@ nav a {
 }
 
 /* Selected tab: white pixel box with blue text and icon */
+nav a.active {
+	background: var(--selectedBox);
+	filter: var(--dropShadow);
+}
 nav a.active,
 nav a.active p {
-	background: var(--lightest1);
 	color: var(--blue3);
-	clip-path: var(--pixelCorners);
 }
-nav a.active img {
+/* Selected icons: tinted, with the shadow on a wrapper. Chained after the SVG tint on the zoomed image, some browsers
+   (Firefox) draw the shadow scaled up */
+:is(nav a.active, .navGroup.current .navGroupToggle) img {
 	filter: url(#tintActive);
+}
+:is(nav a.active, .navGroup.current .navGroupToggle) .navIcon {
+	filter: var(--dropShadow);
+}
+.navIcon {
+	display: flex;
 }
 
 /* Instance area. Always takes up the full box's space so the tabs below never jump. The full box shows while
@@ -266,7 +281,7 @@ nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceCompact {
 	height: var(--instanceRow);
 	padding: 0 8px;
 	border: 0;
-	clip-path: none;
+	filter: none;
 	background: var(--darkest3);
 }
 #instance .instanceToggle:hover {
@@ -285,6 +300,7 @@ nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceCompact {
 	left: 0;
 	right: 0;
 	z-index: 5;
+	filter: var(--dropShadow);
 }
 nav:not(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceMenu {
 	display: none; /* closing the sidebar hides it with the rest of the box */
@@ -301,7 +317,7 @@ nav:not(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceMenu {
 	width: 100%;
 	background: none;
 	border: 0;
-	clip-path: none;
+	filter: none;
 	white-space: nowrap;
 	text-align: left;
 	padding: 2px 8px;
@@ -362,16 +378,6 @@ nav:not(:hover, :has(:focus-visible), :root.sidebarPinned *) .instanceMenu {
 	--pixelBorder: var(--green);
 }
 
-nav:before {
-	content: url(/media/icons/sidebar-top.png);
-	zoom: var(--scale);
-	line-height: 0; /* hug the image instead of sitting in a 27px text line box */
-	font-size: 0;
-	position: absolute;
-	top: 0;
-	left: 0;
-	z-index: -1;
-}
 
 nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) ~ main footer {
 	margin-left: var(--navOpen);
@@ -382,7 +388,7 @@ footer {
 	justify-content: space-between; /* copyright left, links right */
 	align-items: center;
 	padding: 0 16px 0 0;
-	background-color: var(--darkest2);
+	background: var(--sidebarTexture), var(--darkest2); /* texture under the text, like the sidebar */
 	height: 64px;
 	z-index: 3;
 	position: relative;
@@ -456,7 +462,7 @@ button.navGroupToggle {
 	margin-bottom: 10px;
 	padding: 0;
 	border: 0;
-	clip-path: none;
+	filter: none;
 	background: none;
 	color: var(--lightest3);
 }
@@ -473,19 +479,16 @@ button.navGroupToggle:hover {
 nav .navGroup ul a.active,
 nav .navGroup ul a.active p {
 	background: none;
-	color: var(--blue4);
-	clip-path: none;
+	color: var(--blue3); /* the same blue as the section header */
+	filter: none;
 }
 
 /* Section holding the current page: stays open and looks selected, like a tab */
 .navGroup.current button.navGroupToggle {
-	background: var(--lightest1);
+	background: var(--selectedBox);
 	color: var(--blue3);
-	clip-path: var(--pixelCorners);
+	filter: var(--dropShadow);
 	cursor: default;
-}
-.navGroup.current .navGroupToggle img {
-	filter: url(#tintActive);
 }
 nav:is(:hover, :has(:focus-visible), :root.sidebarPinned *) .navGroupToggle .dropdownArrow {
 	opacity: 1;
@@ -526,6 +529,11 @@ button.navGroupToggle {
 /* Hovering the Options header underlines its label like a link (it's a button, so links' underline doesn't reach it) */
 button.navGroupToggle:hover p {
 	text-decoration: underline;
+	/* The same pixel underline links get (typography.css) */
+	text-decoration-thickness: calc(var(--scale) * 1px);
+	text-underline-offset: calc(var(--scale) * 1px);
+	text-decoration-skip-ink: none;
+	text-decoration-color: var(--blue3);
 }
 
 /* Closed sidebar's status light: corner pixels knocked off, a rounded pixel dot */
@@ -544,27 +552,6 @@ button.navGroupToggle:hover p {
 }
 :is(.noSidebar, :root.loggedOut) footer::before {
 	content: none;
-}
-
-/* Sidebar and footer texture overlays, over everything inside them. The sidebar's is fixed rather than absolute so
-   it keeps covering the whole height when the sidebar scrolls; it follows the sidebar's width as it opens */
-nav::after,
-footer::after {
-	content: '';
-	pointer-events: none;
-	background: var(--sidebarTexture);
-	z-index: 10;
-}
-nav::after {
-	position: fixed;
-	top: 0;
-	left: 0;
-	height: 100%;
-	width: inherit;
-}
-footer::after {
-	position: absolute;
-	inset: 0;
 }
 
 /* Pin icon matching the pinned state on <html> */

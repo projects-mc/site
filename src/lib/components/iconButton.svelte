@@ -6,5 +6,5 @@
 </script>
 
 <button class="iconButton" aria-label={label} use:tooltip={label} {onclick}>
-	<img src="/media/icons/{icon}.png" alt="" class="noImgStyle">
+	<img src="/media/icons/{icon}.png" alt="">
 </button>
