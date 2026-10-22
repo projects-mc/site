@@ -20,6 +20,10 @@ export const navItems = [
 				route: 'instance'
 			},
 			{
+				title: 'Databases',
+				route: 'databases'
+			},
+			{
 				title: 'Development',
 				route: 'dev'
 			},

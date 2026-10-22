@@ -65,12 +65,16 @@ export async function refresh() {
 	session.loaded = true;
 }
 
-// Live updates (aspen's /api/events): the instance list whenever it changes, and a note when an instance's backups
-// change, for pages showing them. A dropped connection is retried by the next refresh
+// Live updates (aspen's /api/events): the instance list whenever it changes, and a note when an instance's backups or
+// one of the player's databases change, for pages showing them. A dropped connection is retried by the next refresh
 let events = null;
 // Not state: nothing renders from it
 // eslint-disable-next-line svelte/prefer-svelte-reactivity
 const backupListeners = new Set();
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const databaseListeners = new Set();
+// eslint-disable-next-line svelte/prefer-svelte-reactivity
+const databaseBackupListeners = new Set();
 
 export function connectEvents() {
 	if (events || !token()) return;
@@ -85,9 +89,17 @@ export function connectEvents() {
 		}
 		if (message?.type === 'instances') {
 			setInstances(message.instances);
+			// (Re)connected: whatever changed while the connection was down is read again
+			if (!session.live) for (const listener of [...databaseListeners, ...databaseBackupListeners]) listener(null);
 			session.live = true;
 		} else if (message?.type === 'backups') {
 			for (const listener of backupListeners) listener(message.instance);
+		} else if (message?.type === 'databaseBackups') {
+			for (const listener of databaseBackupListeners) listener(String(message.name ?? ''));
+		} else if (message?.type === 'databases' || message?.type === 'database') {
+			// A database was created or deleted (no name), or one's contents changed
+			const name = message.type === 'database' ? String(message.name ?? '') : null;
+			for (const listener of databaseListeners) listener(name);
 		}
 	};
 	socket.onclose = () => {
@@ -129,4 +141,18 @@ export async function act(action, isLong = false) {
 		clearTimeout(early);
 		await refresh();
 	}
+}
+
+// Calls listener(name) whenever the database `name` changes (a server or the dashboard wrote to it), and listener(null)
+// when a database is created or deleted; returns the unsubscribe function
+export function onDatabasesChanged(listener) {
+	databaseListeners.add(listener);
+	return () => databaseListeners.delete(listener);
+}
+
+// Calls listener(name) whenever a database's backups change (made, restored, pruned or deleted), and listener(null)
+// after reconnecting; returns the unsubscribe function
+export function onDatabaseBackupsChanged(listener) {
+	databaseBackupListeners.add(listener);
+	return () => databaseBackupListeners.delete(listener);
 }

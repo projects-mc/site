@@ -33,6 +33,9 @@ const json = async (method, path, options) => {
 };
 const text = async (path) => (await request('GET', path)).text();
 const at = (name) => `/instances/${encodeURIComponent(name)}`;
+const db = (name) => `/databases/${encodeURIComponent(name)}`;
+const keysQuery = (prefix, after) =>
+	`?prefix=${encodeURIComponent(prefix)}${after ? `&after=${encodeURIComponent(after)}` : ''}`;
 const query = (path) => `?path=${encodeURIComponent(path)}`;
 // Links the browser opens by itself can't send headers, so they carry the token
 const link = (path) => `${base}${path}${path.includes('?') ? '&' : '?'}token=${token()}`;
@@ -56,6 +59,11 @@ export const api = {
 	start: (name) => json('POST', `${at(name)}/start`),
 	stop: (name) => json('POST', `${at(name)}/stop`),
 	restart: (name) => json('POST', `${at(name)}/restart`),
+	// player: a Minecraft UUID, or the name of a player who has used the dashboard
+	addMember: (name, player) => json('POST', `${at(name)}/members`, { json: { player } }),
+	removeMember: (name, id) => json('DELETE', `${at(name)}/members/${encodeURIComponent(id)}`),
+	// The description in the lobby's game picker (motd in server.toml), MiniMessage with <br> between lines
+	setMotd: (name, motd) => json('PUT', `${at(name)}/motd`, { json: { motd } }),
 	console: (name) => new WebSocket(link(`${at(name)}/console`).replace(/^http/, 'ws')),
 
 	logs: (name) => json('GET', `${at(name)}/logs`),
@@ -76,5 +84,32 @@ export const api = {
 	deleteBackup: (name, id) => json('DELETE', `${at(name)}/backups/${id}`),
 	backupLink: (name, id) => link(`${at(name)}/backups/${id}/download`),
 
-	gitPull: (name, url, branch) => json('POST', `${at(name)}/git`, { json: { url, branch } })
+	gitPull: (name, url, branch) => json('POST', `${at(name)}/git`, { json: { url, branch } }),
+
+	// The player's databases: variables {name::...} shared by all of their servers
+	databases: () => json('GET', '/databases'),
+	createDatabase: (name) => json('POST', '/databases', { json: { name } }),
+	deleteDatabase: (name) => json('DELETE', db(name)),
+	databaseStat: (name) => json('GET', `${db(name)}/stat`),
+	// One level of variables under prefix ('' or 'list::'), 200 at a time after the name `after`
+	databaseKeys: (name, prefix, after) =>
+		json('GET', `${db(name)}/keys${keysQuery(prefix, after)}`),
+	databaseKey: (name, key) => json('GET', `${db(name)}/key?key=${encodeURIComponent(key)}`),
+	// type: 'string', 'number' or 'boolean'
+	setDatabaseKey: (name, key, type, value) => json('PUT', `${db(name)}/key`, { json: { key, type, value } }),
+	// list: delete everything under key:: instead of key itself
+	deleteDatabaseKey: (name, key, list = false) =>
+		json('DELETE', `${db(name)}/key?key=${encodeURIComponent(key)}${list ? '&list=true' : ''}`),
+	databaseDownloadLink: (name) => link(`${db(name)}/download`),
+
+	// A database's backups: [{ id, time, kind ('auto', 'manual' or 'restore': what it held before a restore), size }]
+	databaseBackups: (name) => json('GET', `${db(name)}/backups`),
+	backUpDatabase: (name) => json('POST', `${db(name)}/backups`),
+	deleteDatabaseBackup: (name, id) => json('DELETE', `${db(name)}/backups/${id}`),
+	// Servers using it keep running and see the restored contents straight away
+	restoreDatabase: (name, id) => json('POST', `${db(name)}/backups/${id}/restore`),
+	databaseBackupLink: (name, id) => link(`${db(name)}/backups/${id}/download`),
+	databaseBackupKeys: (name, id, prefix, after) =>
+		json('GET', `${db(name)}/backups/${id}/keys${keysQuery(prefix, after)}`),
+	databaseBackupKey: (name, id, key) => json('GET', `${db(name)}/backups/${id}/key?key=${encodeURIComponent(key)}`)
 };

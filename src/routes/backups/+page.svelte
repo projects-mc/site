@@ -3,7 +3,8 @@
 	import HistoryList from '#lib/components/historyList.svelte';
 	import IconButton from '#lib/components/iconButton.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
-	import { currentInstance, act, onBackupsChanged } from '#lib/session.svelte.js';
+	import DatabaseBackups from '#lib/components/databaseBackups.svelte';
+	import { currentInstance, act, onBackupsChanged, onDatabasesChanged } from '#lib/session.svelte.js';
 	import { api } from '#lib/api';
 	import { isoFromUnix, formatBytes } from '#lib/format';
 
@@ -11,6 +12,11 @@
 	let stopped = $derived(currentInstance()?.phase === 'stopped');
 	let backups = $state([]);
 	let busy = $state(false);
+	// The player's databases, each with its own backups below the server's
+	let databases = $state([]);
+	const loadDatabases = async () => { databases = (await api.databases().catch(() => null))?.databases ?? databases; };
+	$effect(() => { loadDatabases(); });
+	$effect(() => onDatabasesChanged((changed) => { if (changed === null) loadDatabases(); }));
 
 	$effect(() => { load(name); });
 	// A backup made elsewhere (the automatic one when the server stops, another tab) shows up straight away
@@ -63,3 +69,11 @@
 		<button onclick={() => remove(backup)} aria-label="Delete">&times;</button>
 	{/snippet}
 </HistoryList>
+
+{#if databases.length}
+	<h2>Databases</h2>
+	<p>Each database is backed up every 2 days when it changed; the newest 5 backups are kept.</p>
+	{#each databases as database (database.name)}
+		<DatabaseBackups name={database.name}/>
+	{/each}
+{/if}

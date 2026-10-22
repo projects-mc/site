@@ -23,6 +23,16 @@ describe('api', () => {
 		expect(options.headers.Authorization).toBe('Bearer abc');
 	});
 
+	it('adds and removes members', async () => {
+		fetchMock.mockResolvedValueOnce(reply(200, { name: 'game' })).mockResolvedValueOnce(reply(204));
+		await api.addMember('game', 'Steve');
+		await api.removeMember('game', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
+		expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/instances\/game\/members$/);
+		expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ player: 'Steve' });
+		expect(fetchMock.mock.calls[1][0]).toMatch(/\/members\/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa$/);
+		expect(fetchMock.mock.calls[1][1].method).toBe('DELETE');
+	});
+
 	it('returns null for 204 No Content', async () => {
 		fetchMock.mockResolvedValue(reply(204));
 		expect(await api.stop('game')).toBeNull();
@@ -81,5 +91,46 @@ describe('api', () => {
 		expect(api.fileLink('game', 'a.sk')).toMatch(/file\?path=a\.sk&token=tok$/);
 		expect(api.events().url).toMatch(/^wss?:\/\/.*\/api\/events\?token=tok$/);
 		expect(api.console('game').url).toMatch(/^wss?:\/\/.*\/instances\/game\/console\?token=tok$/);
+	});
+
+	it('reaches databases by name, whatever the name', async () => {
+		localStorage.setItem('session', 'abc');
+		fetchMock.mockImplementation(async () => reply(204));
+		await api.createDatabase('My Stats');
+		await api.databaseKeys('My Stats', 'coins::', 'al ice');
+		await api.databaseKeys('My Stats', '');
+		await api.setDatabaseKey('My Stats', 'coins::bob', 'number', '5');
+		await api.deleteDatabaseKey('My Stats', 'coins', true);
+		await api.deleteDatabase('My Stats');
+		const calls = fetchMock.mock.calls.map(([url, options]) => [options.method, url.replace(/^.*\/api/, '')]);
+		expect(calls).toEqual([
+			['POST', '/databases'],
+			['GET', '/databases/My%20Stats/keys?prefix=coins%3A%3A&after=al%20ice'],
+			['GET', '/databases/My%20Stats/keys?prefix='],
+			['PUT', '/databases/My%20Stats/key'],
+			['DELETE', '/databases/My%20Stats/key?key=coins&list=true'],
+			['DELETE', '/databases/My%20Stats']
+		]);
+		expect(JSON.parse(fetchMock.mock.calls[3][1].body)).toEqual({ key: 'coins::bob', type: 'number', value: '5' });
+		expect(api.databaseDownloadLink('a/b')).toMatch(/\/api\/databases\/a%2Fb\/download\?token=abc$/);
+	});
+
+	it("reaches a database's backups", async () => {
+		localStorage.setItem('session', 'abc');
+		fetchMock.mockImplementation(async () => reply(204));
+		await api.backUpDatabase('My Stats');
+		await api.restoreDatabase('My Stats', '1700000000000-auto');
+		await api.databaseBackupKeys('My Stats', '1700000000000-auto', 'coins::');
+		await api.databaseBackupKey('My Stats', '1700000000000-auto', 'a b');
+		await api.deleteDatabaseBackup('My Stats', '1700000000000-auto');
+		const calls = fetchMock.mock.calls.map(([url, options]) => [options.method, url.replace(/^.*\/api/, '')]);
+		expect(calls).toEqual([
+			['POST', '/databases/My%20Stats/backups'],
+			['POST', '/databases/My%20Stats/backups/1700000000000-auto/restore'],
+			['GET', '/databases/My%20Stats/backups/1700000000000-auto/keys?prefix=coins%3A%3A'],
+			['GET', '/databases/My%20Stats/backups/1700000000000-auto/key?key=a%20b'],
+			['DELETE', '/databases/My%20Stats/backups/1700000000000-auto']
+		]);
+		expect(api.databaseBackupLink('x', '1-manual')).toMatch(/\/api\/databases\/x\/backups\/1-manual\/download\?token=abc$/);
 	});
 });

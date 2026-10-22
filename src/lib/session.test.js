@@ -10,6 +10,8 @@ import {
 	connectEvents,
 	disconnectEvents,
 	onBackupsChanged,
+	onDatabasesChanged,
+	onDatabaseBackupsChanged,
 	readStored
 } from '#lib/session.svelte.js';
 import { ApiError } from '#lib/api';
@@ -136,6 +138,35 @@ describe('live updates', () => {
 		stop();
 		FakeSocket.opened[0].receive({ type: 'backups', instance: 'two' });
 		expect(seen).toEqual(['one']);
+	});
+	it('tells pages about database changes, and to read everything again after reconnecting', async () => {
+		localStorage.setItem('session', 't');
+		connectEvents();
+		const seen = [];
+		const stop = onDatabasesChanged((name) => seen.push(name));
+		// Connecting counts as "anything may have changed"
+		FakeSocket.opened[0].receive({ type: 'instances', instances: [] });
+		FakeSocket.opened[0].receive({ type: 'database', name: 'stats' });
+		FakeSocket.opened[0].receive({ type: 'databases' });
+		// Only the first list after connecting does
+		FakeSocket.opened[0].receive({ type: 'instances', instances: [] });
+		stop();
+		FakeSocket.opened[0].receive({ type: 'database', name: 'other' });
+		expect(seen).toEqual([null, 'stats', null]);
+	});
+
+
+	it('tells pages about database backups, and to read them again after reconnecting', async () => {
+		localStorage.setItem('session', 't');
+		connectEvents();
+		const seen = [];
+		const stop = onDatabaseBackupsChanged((name) => seen.push(name));
+		FakeSocket.opened[0].receive({ type: 'instances', instances: [] });
+		FakeSocket.opened[0].receive({ type: 'databaseBackups', name: 'stats' });
+		FakeSocket.opened[0].receive({ type: 'database', name: 'stats' });
+		stop();
+		FakeSocket.opened[0].receive({ type: 'databaseBackups', name: 'other' });
+		expect(seen).toEqual([null, 'stats']);
 	});
 
 	it('does not connect without a token', () => {
