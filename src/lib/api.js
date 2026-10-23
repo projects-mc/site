@@ -62,8 +62,11 @@ export const api = {
 	// player: a Minecraft UUID, or the name of a player who has used the dashboard
 	addMember: (name, player) => json('POST', `${at(name)}/members`, { json: { player } }),
 	removeMember: (name, id) => json('DELETE', `${at(name)}/members/${encodeURIComponent(id)}`),
-	// The description in the lobby's game picker (motd in server.toml), MiniMessage with <br> between lines
+	// The description in the lobby's game picker (motd in its settings), MiniMessage with <br> between lines
 	setMotd: (name, motd) => json('PUT', `${at(name)}/motd`, { json: { motd } }),
+	// The server's settings file (settings.toml), downloaded and uploaded whole; read when the server next starts
+	settingsLink: (name) => link(`${at(name)}/settings`),
+	putSettings: (name, text) => json('PUT', `${at(name)}/settings`, { body: text }),
 	console: (name) => new WebSocket(link(`${at(name)}/console`).replace(/^http/, 'ws')),
 
 	logs: (name) => json('GET', `${at(name)}/logs`),

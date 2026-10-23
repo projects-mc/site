@@ -26,6 +26,13 @@
 		if (!confirm(leaving ? `Leave ${instance.name}? You won't see it here any more.` : `Remove ${member.name || member.id}?`)) return;
 		await act(() => api.removeMember(instance.name, member.id));
 	}
+
+	// A whole new settings file; aspen refuses one with anything players can't set
+	async function uploadSettings(e) {
+		const file = e.currentTarget.files?.[0];
+		e.currentTarget.value = '';
+		if (file) await act(async () => api.putSettings(instance.name, await file.text()));
+	}
 </script>
 
 <Title name="Instance"/>
@@ -38,6 +45,11 @@
 	<p>Memory limit: {formatBytes(instance.memoryMax)}</p>
 	<p>Players join it from the lobby's compass, or anyone on another server can be sent with
 		<code>send player to server "{instance.name}"</code>.</p>
+	<h2>Settings</h2>
+	<p>The server's settings (view distances, world height, its description) are kept beside its files, where scripts
+		can't change them. Download them, edit them and upload them again; they apply when the server next starts.</p>
+	<p><button onclick={() => location.assign(api.settingsLink(instance.name))}>Download settings.toml</button>
+		<label>Upload <input type="file" accept=".toml,text/plain" onchange={uploadSettings}></label></p>
 	{#if !instance.lobby}
 		<h2>Game picker</h2>
 		<MotdEditor {instance}/>

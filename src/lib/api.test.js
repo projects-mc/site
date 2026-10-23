@@ -133,4 +133,14 @@ describe('api', () => {
 		]);
 		expect(api.databaseBackupLink('x', '1-manual')).toMatch(/\/api\/databases\/x\/backups\/1-manual\/download\?token=abc$/);
 	});
+
+	it("downloads and uploads a server's settings whole", async () => {
+		localStorage.setItem('session', 'abc');
+		fetchMock.mockImplementation(async () => reply(200, { name: 'my game' }));
+		await api.putSettings('my game', 'motd = "<gold>Hi"\n');
+		const [url, options] = fetchMock.mock.calls[0];
+		expect([options.method, url.replace(/^.*\/api/, '')]).toEqual(['PUT', '/instances/my%20game/settings']);
+		expect(options.body).toBe('motd = "<gold>Hi"\n');
+		expect(api.settingsLink('my game')).toMatch(/\/api\/instances\/my%20game\/settings\?token=abc$/);
+	});
 });

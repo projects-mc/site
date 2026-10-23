@@ -217,7 +217,7 @@
 		<a href="https://docs.advntr.dev/minimessage/format.html" target="_blank" rel="noreferrer">MiniMessage</a>.
 		Colors, styles, gradients, <code>&lt;sprite:item/diamond&gt;</code> and <code>&lt;head:Notch&gt;</code> work
 		(each sprite or head counts as one character); clicks and hovers don't. It's the <code>motd</code> line in
-		<code>server.toml</code>.</p>
+		its settings (Options, then Instance, then Settings).</p>
 	<div class="motd">
 		<div
 			class="editor field"

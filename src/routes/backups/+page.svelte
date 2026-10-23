@@ -10,6 +10,8 @@
 
 	let name = $derived(currentInstance()?.name);
 	let stopped = $derived(currentInstance()?.phase === 'stopped');
+	// A server following a git branch has its history there: no new backups, the last ones expire after a week
+	let followsGit = $derived(currentInstance()?.git);
 	let backups = $state([]);
 	let busy = $state(false);
 	// The player's databases, each with its own backups below the server's
@@ -54,10 +56,17 @@
 
 <InstanceHeader page="Backups"/>
 
-<p>A backup is made automatically every time the server stops.</p>
+{#if followsGit}
+	<p>This server follows a git branch, which keeps its history, so it gets no new backups. Backups are deleted after
+		7 days.</p>
+{:else}
+	<p>A backup is made automatically every time the server stops, and kept for 7 days.</p>
+{/if}
 <HistoryList title="Backups" items={backups} emptyText="No backups yet.">
 	{#snippet headerAction()}
-		<button disabled={busy} onclick={() => change(() => api.backUp(name))}>Back up now</button>
+		{#if !followsGit}
+			<button disabled={busy} onclick={() => change(() => api.backUp(name))}>Back up now</button>
+		{/if}
 		<button onclick={() => location.assign(api.downloadLink(name))}>Download current files</button>
 	{/snippet}
 	{#snippet label(backup)}
