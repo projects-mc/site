@@ -84,7 +84,12 @@ export const api = {
 	deleteBackup: (name, id) => json('DELETE', `${at(name)}/backups/${id}`),
 	backupLink: (name, id) => link(`${at(name)}/backups/${id}/download`),
 
-	gitPull: (name, url, branch) => json('POST', `${at(name)}/git`, { json: { url, branch } }),
+	// The server's git repository (aspen's git.rs): its state (fetches the branch), the settings (an empty url removes
+	// it; the masked url as shown keeps the saved one), and updating or rolling back. commit null is the branch's
+	// latest; without force, files changed on the server stop it with {dirty: [paths]}
+	git: (name) => json('GET', `${at(name)}/git`),
+	gitSettings: (name, settings) => json('PUT', `${at(name)}/git`, { json: settings }),
+	gitCheckout: (name, commit, force) => json('POST', `${at(name)}/git/checkout`, { json: { commit, force } }),
 
 	// The player's databases: variables {name::...} shared by all of their servers
 	databases: () => json('GET', '/databases'),

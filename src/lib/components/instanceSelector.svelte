@@ -1,6 +1,7 @@
 <script>
 	import { api } from '#lib/api';
 	import { session, currentInstance, select, act } from '#lib/session.svelte.js';
+	import { checkout } from '#lib/git';
 
 	let open = $state(false);
 	let instance = $derived(currentInstance());
@@ -18,6 +19,23 @@
 	function choose(name) {
 		select(name);
 		open = false;
+	}
+
+	// The branch is checked (on demand: aspen only checks running servers by itself) once per selected server, which
+	// sets gitUpdate in the instance list
+	let checked = '';
+	$effect(() => {
+		if (instance?.git && instance.name !== checked) {
+			checked = instance.name;
+			api.git(instance.name).catch(() => {});
+		}
+	});
+
+	let updating = $state(false);
+	async function update() {
+		updating = true;
+		await act(() => checkout(instance.name, null));
+		updating = false;
 	}
 
 	async function create() {
@@ -64,6 +82,11 @@
 					</div>
 				{/if}
 				<span class="instanceState" class:running>{instance.phase[0].toUpperCase() + instance.phase.slice(1)}</span>
+				{#if instance.gitUpdate}
+					<button class="updateButton" onclick={update} disabled={updating} title="Pull the branch's new commit{running ? ' and reload the scripts it changed' : ''}">
+						<img src="/media/icons/update.png" alt="">{updating ? 'Updating...' : 'Update'}
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>

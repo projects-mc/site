@@ -1,42 +1,120 @@
 <script>
 	import Title from '#lib/components/title.svelte';
-	import { currentInstance, readStored } from '#lib/session.svelte.js';
+	import { currentInstance } from '#lib/session.svelte.js';
 	import { api } from '#lib/api';
+	import { checkout } from '#lib/git';
+	import { ago } from '#lib/format';
 
-	// Pulls a git branch into the server's files. The repository and branch are remembered per server in this browser
+	// The server's files can follow a branch of a git repository; aspen keeps the settings and does the git work
 	let name = $derived(currentInstance()?.name);
-	let url = $state('');
-	let branch = $state('main');
-	let output = $state('');
-	let pulling = $state(false);
+	let running = $derived(currentInstance()?.phase === 'running');
+	let repo = $state(null);
+	let settings = $state({ url: '', branch: 'main', autoReload: false, pullOnStart: false });
+	let commit = $state('');
+	let busy = $state('');
+	let error = $state('');
 
 	$effect(() => {
-		const saved = readStored(`git:${name}`, {});
-		url = saved.url ?? '';
-		branch = saved.branch ?? 'main';
-		output = '';
+		const loading = name;
+		repo = null;
+		error = '';
+		api.git(loading).then(show, (e) => { if (loading === name) error = e.message; });
 	});
 
-	async function pull(e) {
-		e.preventDefault();
-		localStorage.setItem(`git:${name}`, JSON.stringify({ url, branch }));
-		pulling = true;
-		try {
-			output = (await api.gitPull(name, url.trim(), branch.trim())).output || 'Up to date.';
-		} catch (error) {
-			output = error.message;
-		}
-		pulling = false;
+	function show(reply) {
+		repo = reply;
+		settings = { url: reply.url, branch: reply.branch, autoReload: reply.autoReload, pullOnStart: reply.pullOnStart };
+		commit = reply.head?.hash ?? reply.latest?.hash ?? '';
 	}
+
+	async function run(what, action) {
+		busy = what;
+		error = '';
+		try {
+			const reply = await action();
+			if (reply) show(reply);
+		} catch (e) {
+			error = e.message;
+		}
+		busy = '';
+	}
+
+	function save(e) {
+		e.preventDefault();
+		run('save', () => api.gitSettings(name, { ...settings, url: settings.url.trim(), branch: settings.branch.trim() }));
+	}
+
+	function remove() {
+		if (confirm('Stop following this repository? The files stay as they are.'))
+			run('save', () => api.gitSettings(name, { url: '', branch: '' }));
+	}
+
+	function rollBack() {
+		const notes = [];
+		if (repo.autoReload) notes.push('Auto-update is on: the server stays on this commit until a new commit is pushed, then updates to that.');
+		if (repo.pullOnStart) notes.push('Update on start is on: the next time the server starts, it goes back to the latest commit.');
+		if (notes.length && !confirm(`${notes.join('\n\n')}\n\nRoll back anyway?`)) return;
+		run('rollback', () => checkout(name, commit));
+	}
+
+	const short = (hash) => hash.slice(0, 7);
 </script>
 
 <Title name="Development"/>
-<h2>Pull from git</h2>
-<p>Makes this server's files match a branch of a git repository. Files the repository doesn't have are left alone.
-	For a private repository, put an access token in the address: <code>https://TOKEN@github.com/you/repo.git</code>.</p>
-<form onsubmit={pull}>
-	<label>Repository <input type="url" bind:value={url} placeholder="https://github.com/you/your-server.git" required size="50"></label>
-	<label>Branch <input type="text" bind:value={branch} required size="12"></label>
-	<button disabled={pulling}>{pulling ? 'Pulling...' : 'Pull'}</button>
+<h2>Git</h2>
+<p>Puts this server's files on a branch of a git repository: update when it has new commits, or roll back to an earlier
+	one. If the server is running, the scripts that changed (and those that depend on them) are reloaded. Files the
+	repository doesn't have are left alone.</p>
+{#if error}<p>{error}</p>{/if}
+{#if repo?.warning}<p>{repo.warning}</p>{/if}
+
+{#if repo?.url}
+	{#if repo.error}
+		<p>Couldn't reach the repository: {repo.error}</p>
+	{:else}
+		<p>On {#if repo.head}<code>{short(repo.head.hash)}</code> {repo.head.message}{:else}no commit yet{/if}.</p>
+		{#if repo.updateAvailable}
+			<p>New: <code>{short(repo.latest.hash)}</code> {repo.latest.message}
+				<button onclick={() => run('update', () => checkout(name, null))} disabled={!!busy}>
+					{busy === 'update' ? 'Updating...' : running ? 'Update and reload' : 'Update'}
+				</button></p>
+		{/if}
+		{#if repo.dirty?.length}
+			<p>Changed on this server since (updating overwrites them): {repo.dirty.join(', ')}</p>
+		{/if}
+		{#if repo.commits.length}
+			<h3>Roll back</h3>
+			<p>
+				<select bind:value={commit}>
+					{#each repo.commits as c (c.hash)}
+						<option value={c.hash}>{short(c.hash)} {c.message} ({c.author}, {ago(c.time)})</option>
+					{/each}
+				</select>
+				<button onclick={rollBack} disabled={!!busy || commit === repo.head?.hash}>
+					{busy === 'rollback' ? 'Rolling back...' : 'Roll back to it'}
+				</button>
+			</p>
+			{#if repo.autoReload || repo.pullOnStart}
+				<p>Rolling back with
+					{repo.autoReload && repo.pullOnStart ? 'auto-update and update on start' : repo.autoReload ? 'auto-update' : 'update on start'}
+					on:
+					{#if repo.autoReload}the server stays on that commit until a new one is pushed, then updates to it.{/if}
+					{#if repo.pullOnStart}The next start goes back to the latest commit.{/if}</p>
+			{/if}
+		{/if}
+	{/if}
+{/if}
+
+<h3>Settings</h3>
+<form onsubmit={save}>
+	<label>Repository <input type="text" bind:value={settings.url} placeholder="https://github.com/you/your-server.git" required size="50"></label>
+	<label>Branch <input type="text" bind:value={settings.branch} required size="12"></label>
+	<label><input type="checkbox" bind:checked={settings.autoReload}> Update and reload on every new commit
+		(checked every 5 minutes while the server runs)</label>
+	<label><input type="checkbox" bind:checked={settings.pullOnStart}> Update when the server starts (starts a bit slower)</label>
+	<p>For a private repository, put an access token in the address: <code>https://TOKEN@github.com/you/repo.git</code>.
+		It's never shown again; leave the <code>***</code> to keep it. Automatic updates overwrite changes made to the
+		repository's files on this server.</p>
+	<button disabled={!!busy}>{busy === 'save' ? 'Saving...' : 'Save'}</button>
+	{#if repo?.url}<button type="button" onclick={remove} disabled={!!busy}>Remove</button>{/if}
 </form>
-{#if output}<pre>{output}</pre>{/if}
