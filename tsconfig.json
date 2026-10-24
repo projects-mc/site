@@ -1,0 +1,17 @@
+{
+	"extends": "$app/tsconfig",
+	"compilerOptions": {
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
+		"verbatimModuleSyntax": true,
+		"isolatedModules": true,
+		"erasableSyntaxOnly": true,
+		"skipLibCheck": true,
+		"allowImportingTsExtensions": true,
+		"types": ["$app/types", "vite/client", "node"]
+	},
+	"include": ["src", "*.ts"],
+	"exclude": ["src/service-worker"]
+}

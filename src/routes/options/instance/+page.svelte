@@ -1,9 +1,10 @@
-<script>
+<script lang="ts">
 	import Title from '#lib/components/title.svelte';
 	import MotdEditor from '#lib/components/motdEditor.svelte';
-	import { session, currentInstance, act } from '#lib/session.svelte.js';
-	import { api } from '#lib/api';
-	import { formatBytes } from '#lib/format';
+	import { session, currentInstance, act } from '#lib/session.svelte.ts';
+	import { api } from '#lib/api.ts';
+	import { formatBytes } from '#lib/format.ts';
+	import type { Player } from '#lib/types.ts';
 
 	let instance = $derived(currentInstance());
 	// Members can do everything but delete the instance and change its members
@@ -11,27 +12,34 @@
 	let player = $state('');
 
 	function remove() {
-		const typed = prompt(`This deletes ${instance.name}, its files and its backups for good. Type its name to confirm:`);
-		if (typed?.trim().toLowerCase() === instance.name) act(() => api.remove(instance.name));
+		if (!instance) return;
+		const name = instance.name;
+		const typed = prompt(`This deletes ${name}, its files and its backups for good. Type its name to confirm:`);
+		if (typed?.trim().toLowerCase() === name) void act(() => api.remove(name));
 	}
 
-	async function addMember(e) {
+	async function addMember(e: SubmitEvent) {
 		e.preventDefault();
-		await act(() => api.addMember(instance.name, player.trim()));
+		const name = instance?.name;
+		if (!name) return;
+		await act(() => api.addMember(name, player.trim()));
 		player = '';
 	}
 
-	async function removeMember(member) {
+	async function removeMember(member: Player) {
+		const name = instance?.name;
+		if (!name) return;
 		const leaving = member.id === session.user?.id;
-		if (!confirm(leaving ? `Leave ${instance.name}? You won't see it here any more.` : `Remove ${member.name || member.id}?`)) return;
-		await act(() => api.removeMember(instance.name, member.id));
+		if (!confirm(leaving ? `Leave ${name}? You won't see it here any more.` : `Remove ${member.name || member.id}?`)) return;
+		await act(() => api.removeMember(name, member.id));
 	}
 
 	// A whole new settings file; aspen refuses one with anything players can't set
-	async function uploadSettings(e) {
+	async function uploadSettings(e: Event & { currentTarget: HTMLInputElement }) {
 		const file = e.currentTarget.files?.[0];
 		e.currentTarget.value = '';
-		if (file) await act(async () => api.putSettings(instance.name, await file.text()));
+		const name = instance?.name;
+		if (file && name) await act(async () => api.putSettings(name, await file.text()));
 	}
 </script>
 

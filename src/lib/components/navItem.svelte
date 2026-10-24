@@ -1,12 +1,14 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import type { Snippet } from 'svelte';
+	import type { Pathname } from '#lib/config.ts';
 	let {
 		href,
 		icon,
-		external,
+		external = false,
 		children
-	} = $props();
+	}: { href: Pathname; icon: string; external?: boolean; children: Snippet } = $props();
 
 	let isCurrentPage = $derived(page.url.pathname.startsWith(href));
 </script>

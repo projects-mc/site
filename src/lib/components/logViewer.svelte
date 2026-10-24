@@ -1,16 +1,19 @@
-<script>
+<script lang="ts">
+	import { track } from '#lib/track.ts';
 	import { tick } from 'svelte';
 	import LogLines from '#lib/components/logLines.svelte';
 
 	// Modal log reader with find. Open with viewer.open(title, log)
-	let dialog, findBox, body;
+	let dialog: HTMLDialogElement;
+	let findBox: HTMLInputElement;
+	let body: HTMLElement;
 	let title = $state('');
 	let log = $state('');
 	let query = $state('');
 	let current = $state(0);
 	let matchCount = $state(0);
 
-	export async function open(newTitle, newLog) {
+	export async function open(newTitle: string, newLog: string) {
 		title = newTitle;
 		log = newLog;
 		query = '';
@@ -21,9 +24,8 @@
 
 	// Re-count matches whenever the text being found changes, and jump to the first
 	$effect(() => {
-		query;
-		log;
-		tick().then(() => {
+		track(query, log);
+		void tick().then(() => {
 			matchCount = body ? body.querySelectorAll('mark').length : 0;
 			current = 0;
 			focusMatch();
@@ -36,14 +38,14 @@
 		marks[current]?.scrollIntoView({ block: 'center' });
 	}
 
-	function step(by) {
+	function step(by: number) {
 		if (!matchCount) return;
 		current = (current + by + matchCount) % matchCount;
 		focusMatch();
 	}
 
 	// Ctrl+F / Cmd+F finds inside the log instead of the page behind it
-	function onKeydown(e) {
+	function onKeydown(e: KeyboardEvent) {
 		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
 			e.preventDefault();
 			findBox.focus();
@@ -51,7 +53,7 @@
 		}
 	}
 
-	function onFindKeydown(e) {
+	function onFindKeydown(e: KeyboardEvent) {
 		// Escape in a search box would only clear it; close the viewer straight away instead
 		if (e.key === 'Escape') {
 			e.preventDefault();
@@ -64,7 +66,9 @@
 	}
 
 	// A click on the dimmed backdrop (the dialog element itself, outside its box) closes it
-	const onClick = (e) => { if (e.target === dialog) dialog.close(); };
+	const onClick = (e: MouseEvent) => {
+		if (e.target === dialog) dialog.close();
+	};
 </script>
 
 <svelte:head>

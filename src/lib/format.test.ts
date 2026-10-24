@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { formatBytes, ago, isoFromUnix, formatRange, formatDay } from '#lib/format';
-import { parseLog } from '#lib/console';
+import { formatBytes, ago, isoFromUnix, formatRange, formatDay } from '#lib/format.ts';
+import { parseLog } from '#lib/console.ts';
 
 afterEach(() => vi.useRealTimers());
 

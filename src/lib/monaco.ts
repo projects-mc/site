@@ -4,7 +4,7 @@ import EditorWorker from 'monaco-editor/editor/editor.worker?worker';
 import JsonWorker from 'monaco-editor/language/json/json.worker?worker';
 
 self.MonacoEnvironment = {
-	getWorker: (_, label) => (label === 'json' ? new JsonWorker() : new EditorWorker())
+	getWorker: (_: string, label: string) => (label === 'json' ? new JsonWorker() : new EditorWorker())
 };
 
 // Skript: enough highlighting to read a script at a glance, not a full grammar

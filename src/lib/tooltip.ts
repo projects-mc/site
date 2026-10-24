@@ -1,6 +1,8 @@
+import type { Action } from 'svelte/action';
+
 // Svelte action: use:tooltip={text} shows text in a small pixel box above the element on hover or keyboard focus.
 // It lives in the top layer (a popover), so the clipped corners of pixel boxes can't cut it off
-export function tooltip(node, text) {
+export const tooltip: Action<HTMLElement, string> = (node, text) => {
 	const tip = document.createElement('span');
 	tip.className = 'tooltip pixelBox';
 	tip.popover = 'manual';
@@ -29,4 +31,4 @@ export function tooltip(node, text) {
 			tip.remove();
 		}
 	};
-}
+};

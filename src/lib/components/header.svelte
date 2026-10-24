@@ -1,16 +1,16 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 
-	import { navItems } from '#lib/config';
+	import { navItems } from '#lib/config.ts';
 	import NavItem from '#lib/components/navItem.svelte';
 	import NavGroup from '#lib/components/navGroup.svelte';
 	import InstanceSelector from '#lib/components/instanceSelector.svelte';
-	import { session } from '#lib/session.svelte.js';
+	import { session } from '#lib/session.svelte.ts';
 
-	const focusMainContent = (e) => {
+	const focusMainContent = (e: MouseEvent) => {
 		e.preventDefault();
-		document.querySelector("main").focus();
+		document.querySelector('main')?.focus();
 	};
 
 	// Pinning keeps the sidebar open and pushes the page content over; remembered across visits. The state lives as a
@@ -26,7 +26,7 @@
 
 	function togglePin() {
 		pinned = !pinned;
-		localStorage.setItem('sidebarPinned', pinned);
+		localStorage.setItem('sidebarPinned', String(pinned));
 		document.documentElement.classList.toggle('sidebarPinned', pinned);
 	}
 </script>

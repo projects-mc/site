@@ -6,9 +6,9 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"dev": "vite dev",
-		"lint": "prettier --check . && eslint .",
-		"test": "vitest run",
-		"format": "prettier --write ."
+		"check": "svelte-kit sync && svelte-check --fail-on-warnings",
+		"lint": "eslint .",
+		"test": "vitest run"
 	},
 	"author": "Playboard",
 	"license": "UNLICENSED",
@@ -21,11 +21,12 @@
 		"vite": "^8.3.4"
 	},
 	"devDependencies": {
+		"@types/node": "^26.6.5",
 		"eslint": "^10.12.0",
-		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.23.1",
-		"prettier": "^3.9.9",
+		"svelte-check": "^4.7.7",
 		"typescript": "^5",
+		"typescript-eslint": "^8.72.0",
 		"vitest": "^5.0.5"
 	},
 	"type": "module",

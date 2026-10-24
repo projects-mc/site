@@ -1,16 +1,17 @@
-<script>
+<script lang="ts">
 	import Title from '#lib/components/title.svelte';
 	import Modal from '#lib/components/modal.svelte';
 	import DatabaseBrowser from '#lib/components/databaseBrowser.svelte';
-	import { api } from '#lib/api';
-	import { onDatabasesChanged } from '#lib/session.svelte.js';
-	import { formatBytes } from '#lib/format';
-	import { scriptName, validName } from '#lib/database';
+	import { api } from '#lib/api.ts';
+	import { onDatabasesChanged } from '#lib/session.svelte.ts';
+	import { formatBytes } from '#lib/format.ts';
+	import { scriptName, validName } from '#lib/database.ts';
 	import { onMount } from 'svelte';
+	import type { DatabaseInfo } from '#lib/types.ts';
 
 	// The player's databases, one of them open in the browser below. Read again when one is created or deleted
 	// (here, in another tab, or in game)
-	let databases = $state([]);
+	let databases: DatabaseInfo[] = $state([]);
 	let max = $state(0);
 	let maxSize = $state(0);
 	let error = $state('');
@@ -21,28 +22,30 @@
 	let deleting = $state(false);
 	let typedName = $state('');
 
-	async function attempt(action) {
+	async function attempt(action: () => Promise<unknown>) {
 		error = '';
 		try {
 			await action();
 			return true;
 		} catch (e) {
-			error = e.message;
+			error = e instanceof Error ? e.message : String(e);
 			return false;
 		}
 	}
 
 	async function loadList() {
-		await attempt(async () => ({ databases, max, maxSize } = await api.databases()));
+		await attempt(async () => {
+			({ databases, max, maxSize } = await api.databases());
+		});
 		if (selected && !databases.some((d) => d.name === selected)) selected = '';
 	}
 
 	onMount(() => {
-		loadList();
-		return onDatabasesChanged((name) => { if (name === null) loadList(); });
+		void loadList();
+		return onDatabasesChanged((name) => { if (name === null) void loadList(); });
 	});
 
-	async function create(e) {
+	async function create(e: SubmitEvent) {
 		e.preventDefault();
 		const name = newName.trim();
 		if (!(await attempt(() => api.createDatabase(name)))) return;
@@ -51,7 +54,7 @@
 		selected = name;
 	}
 
-	async function removeDatabase(e) {
+	async function removeDatabase(e: SubmitEvent) {
 		e.preventDefault();
 		if (!(await attempt(() => api.deleteDatabase(selected)))) return;
 		deleting = false;

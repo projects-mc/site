@@ -1,5 +1,5 @@
-<script>
-  let { name, dontShowHeader } = $props();
+<script lang="ts">
+	let { name, dontShowHeader = false }: { name: string; dontShowHeader?: boolean } = $props();
 </script>
 <svelte:head>
 	<title>{ name } - Playboard</title>

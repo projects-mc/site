@@ -1,12 +1,12 @@
-<script>
+<script lang="ts">
 	import Title from '#lib/components/title.svelte';
-	import { currentInstance } from '#lib/session.svelte.js';
+	import { currentInstance } from '#lib/session.svelte.ts';
 
 	// page: what the browser tab calls this page; the visible header is the instance's name
-	let { page } = $props();
-	let instance = $derived(currentInstance() ?? { name: "" });
+	let { page }: { page: string } = $props();
+	let name = $derived(currentInstance()?.name ?? '');
 </script>
 
-<Title name="{page} - {instance.name}" dontShowHeader/>
+<Title name="{page} - {name}" dontShowHeader/>
 
-<h1 class="instanceTitle">[{instance.name}]</h1>
+<h1 class="instanceTitle">[{name}]</h1>

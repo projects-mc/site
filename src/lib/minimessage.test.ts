@@ -1,19 +1,21 @@
 import { describe, it, expect } from 'vitest';
-import { preview, toRows, fromRows, headId, HEAD_TAG, LINES, WIDTH, COLORS } from '#lib/minimessage';
+import { preview, toRows, fromRows, headId, HEAD_TAG, LINES, WIDTH, COLORS, type Line } from '#lib/minimessage.ts';
+import { at } from '../test-util.ts';
 
-const plain = (result) => result.lines.map((l) => l.segments.map((s) => s.text ?? '■').join(''));
+const plain = (result: { lines: Line[] }) => result.lines.map((l) => l.segments.map((s) => s.text ?? '■').join(''));
+const first = (source: string) => at(preview(source).lines);
 
 describe('motd preview', () => {
 	it('styles text', () => {
 		const { lines, clipped } = preview('<red>Bed <bold>wars</bold>!');
 		expect(clipped).toBe(false);
-		expect(lines[0].segments).toEqual([
+		expect(at(lines).segments).toEqual([
 			{ text: 'Bed ', style: { color: COLORS.red } },
 			{ text: 'wars', style: { color: COLORS.red, bold: true } },
 			{ text: '!', style: { color: COLORS.red } }
 		]);
-		expect(preview('<#12AB34>x<reset>y').lines[0].segments.map((s) => s.style)).toEqual([{ color: '#12ab34' }, {}]);
-		expect(preview('<color:gold>x</color>').lines[0].segments[0].style).toEqual({ color: COLORS.gold });
+		expect(first('<#12AB34>x<reset>y').segments.map((s) => s.style)).toEqual([{ color: '#12ab34' }, {}]);
+		expect(at(first('<color:gold>x</color>').segments).style).toEqual({ color: COLORS.gold });
 	});
 
 	it('clips to the lines and width the game shows', () => {
@@ -26,8 +28,8 @@ describe('motd preview', () => {
 
 	it('counts sprites as one character', () => {
 		const result = preview('<sprite:item/diamond>' + 'z'.repeat(40));
-		expect(result.lines[0].segments[0].sprite).toBe('item/diamond');
-		expect(result.lines[0].width).toBe(WIDTH);
+		expect(at(at(result.lines).segments).sprite).toBe('item/diamond');
+		expect(at(result.lines).width).toBe(WIDTH);
 	});
 
 	it('keeps tags the game ignores as text', () => {
@@ -50,13 +52,13 @@ describe('heads', () => {
 		expect(headId(`"${texture}"`)).toBe('e70dcd95');
 		expect(headId(texture)).toBe('e70dcd95');
 		expect(headId('x'.repeat(40))).toBe(null);
-		expect(preview(`<red><head:"${texture}">`).lines[0].segments[0].head).toBe('e70dcd95');
+		expect(at(first(`<red><head:"${texture}">`).segments).head).toBe('e70dcd95');
 	});
 
 	it('matches whole head tags only', () => {
 		expect(`a<head:Notch>b<head:"${texture}"><head:x`.match(HEAD_TAG)).toEqual(['<head:Notch>', `<head:"${texture}">`]);
 		expect('\\<head:Notch>'.match(HEAD_TAG)).toBe(null);
 		expect('\\\\<head:Notch>'.match(HEAD_TAG)).toEqual(['<head:Notch>']);
-		expect(preview('\\<head:Notch>').lines[0].segments).toEqual([{ text: '<head:Notch>', style: {} }]);
+		expect(first('\\<head:Notch>').segments).toEqual([{ text: '<head:Notch>', style: {} }]);
 	});
 });

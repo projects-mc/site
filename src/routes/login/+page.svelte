@@ -1,10 +1,10 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Title from '#lib/components/title.svelte';
-	import { api } from '#lib/api';
-	import { session, refresh } from '#lib/session.svelte.js';
+	import { api } from '#lib/api.ts';
+	import { session, refresh } from '#lib/session.svelte.ts';
 
 	// /dashboard in the lobby links here with a one-time code after the #, which never reaches any server log
 	let error = $state('');
@@ -20,9 +20,9 @@
 			await api.login(code);
 			session.user = null;
 			await refresh();
-			goto(resolve('/'), { replaceState: true });
+			void goto(resolve('/'), { replaceState: true });
 		} catch (e) {
-			error = e.message;
+			error = e instanceof Error ? e.message : String(e);
 		}
 	});
 </script>

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -7,7 +7,7 @@
 
 	// Unknown pages go straight to the homepage; replaceState keeps the dead URL out of history
 	let isNotFound = $derived(page.status === 404);
-	onMount(() => { if (isNotFound) goto(resolve('/'), { replaceState: true }); });
+	onMount(() => { if (isNotFound) void goto(resolve('/'), { replaceState: true }); });
 </script>
 
 {#if !isNotFound}

@@ -1,11 +1,12 @@
-<script>
+<script lang="ts">
 	import { page } from '$app/state';
+	import type { NavItem } from '#lib/config.ts';
 	import NavSubitem from '#lib/components/navSubitem.svelte';
 	import SmallCaps from '#lib/components/smallCaps.svelte';
 
 	// A sidebar section that only groups pages: its header opens and closes the list instead of linking anywhere.
 	// While one of its pages is the current one it stays open and shows as selected
-	let { title, route, subitems } = $props();
+	let { title, route, subitems }: { title: string; route: string; subitems: NonNullable<NavItem["subitems"]> } = $props();
 	let hasCurrentPage = $derived(page.url.pathname.startsWith(route + '/'));
 	let isToggledOpen = $state(false);
 	let open = $derived(hasCurrentPage || isToggledOpen);
@@ -26,7 +27,7 @@
 	</button>
 	<ul>
 		{#each subitems as subpage (subpage.route)}
-			<NavSubitem href="{route}/{subpage.route}">
+			<NavSubitem href={subpage.route}>
 				<p><SmallCaps text={subpage.title}/></p>
 			</NavSubitem>
 		{/each}

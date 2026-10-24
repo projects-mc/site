@@ -7,7 +7,7 @@ import {
 	editType,
 	validKey,
 	validName,
-} from '#lib/database';
+} from '#lib/database.ts';
 
 describe('database browsing', () => {
 	it('walks levels and back', () => {
@@ -27,9 +27,9 @@ describe('database browsing', () => {
 		expect(show({ type: 'boolean', size: 1, value: false })).toBe('false');
 		expect(show({ type: 'location', size: 52 })).toBe('location (52 bytes)');
 		expect(show(undefined)).toBe('');
-		expect(editType({ value: 1.5 })).toBe('number');
-		expect(editType({ value: true })).toBe('boolean');
-		expect(editType({ value: '' })).toBe('string');
+		expect(editType({ type: 'double', size: 8, value: 1.5 })).toBe('number');
+		expect(editType({ type: 'boolean', size: 1, value: true })).toBe('boolean');
+		expect(editType({ type: 'string', size: 0, value: '' })).toBe('string');
 		expect(editType({ type: 'location', size: 3 })).toBeNull();
 	});
 

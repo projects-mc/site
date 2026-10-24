@@ -1,31 +1,34 @@
-<script>
+<script lang="ts">
+	import { track } from '#lib/track.ts';
 	import Modal from '#lib/components/modal.svelte';
-	import { api } from '#lib/api';
-	import { onDatabasesChanged } from '#lib/session.svelte.js';
-	import { formatBytes } from '#lib/format';
-	import { enter, crumbs, scriptName, show, editType, validKey } from '#lib/database';
+	import { api } from '#lib/api.ts';
+	import { onDatabasesChanged } from '#lib/session.svelte.ts';
+	import { formatBytes } from '#lib/format.ts';
+	import { enter, crumbs, scriptName, show, editType, validKey, type EditType } from '#lib/database.ts';
+	import type { DatabaseKey, DatabaseStat } from '#lib/types.ts';
 	import { untrack } from 'svelte';
 
 	// A database's variables, a level at a time. Live (backup null): editable, and read again whenever aspen says it
 	// changed (a server or another tab wrote to it), so it's never out of date. A backup: read-only
-	let { name, backup = null } = $props();
+	let { name, backup = null }: { name: string; backup?: string | null } = $props();
 	let readOnly = $derived(backup !== null);
+	const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 	let prefix = $state('');
-	let children = $state([]);
+	let children: DatabaseKey[] = $state([]);
 	let more = $state(false);
-	let stat = $state(null);
+	let stat: DatabaseStat | null = $state(null);
 	let error = $state('');
 
 	// The variable being added or edited: { key, type, value, isNew }
-	let editing = $state(null);
+	let editing: { key: string; type: EditType; value: string | number | boolean; isNew: boolean } | null = $state(null);
 	let editOpen = $state(false);
 	// The variable or list being deleted: { key, list }
-	let removing = $state(null);
+	let removing: { key: string; list: boolean } | null = $state(null);
 	let removeOpen = $state(false);
 
-	const keys = (level, after) =>
-		readOnly ? api.databaseBackupKeys(name, backup, level, after) : api.databaseKeys(name, level, after);
+	const keys = (level: string, after?: string) =>
+		backup !== null ? api.databaseBackupKeys(name, backup, level, after) : api.databaseKeys(name, level, after);
 
 	async function load() {
 		const database = name, from = backup, level = prefix;
@@ -38,7 +41,7 @@
 			more = page.more;
 			stat = info;
 		} catch (e) {
-			error = e.message;
+			error = message(e);
 		}
 	}
 
@@ -48,31 +51,30 @@
 			children = [...children, ...page.children];
 			more = page.more;
 		} catch (e) {
-			error = e.message;
+			error = message(e);
 		}
 	}
 
-	function open(level) {
+	function open(level: string) {
 		prefix = level;
 		children = [];
-		load();
+		void load();
 	}
 
 	// Another database or backup: from the top (untracked: opening a level mustn't rerun this)
 	$effect(() => {
-		name;
-		backup;
+		track(name, backup);
 		untrack(() => open(''));
 	});
 
 	// Changes come in bursts (a server writing every tick); read once they settle
 	$effect(() => {
 		if (readOnly) return;
-		let pending;
+		let pending: ReturnType<typeof setTimeout> | undefined;
 		const unsubscribe = onDatabasesChanged((changed) => {
 			if (changed !== null && changed !== name) return;
 			clearTimeout(pending);
-			pending = setTimeout(load, 300);
+			pending = setTimeout(() => void load(), 300);
 		});
 		return () => {
 			unsubscribe();
@@ -80,18 +82,18 @@
 		};
 	});
 
-	async function attempt(action) {
+	async function attempt(action: () => Promise<unknown>) {
 		error = '';
 		try {
 			await action();
 			return true;
 		} catch (e) {
-			error = e.message;
+			error = message(e);
 			return false;
 		}
 	}
 
-	function edit(child) {
+	function edit(child: DatabaseKey) {
 		editing = { key: prefix + child.name, type: editType(child.value) ?? 'string', value: child.value?.value ?? '', isNew: false };
 		editOpen = true;
 	}
@@ -101,24 +103,27 @@
 		editOpen = true;
 	}
 
-	async function save(e) {
+	async function save(e: SubmitEvent) {
 		e.preventDefault();
+		if (!editing) return;
 		const { key, type, value } = editing;
 		const typed = type === 'boolean' ? value === true || value === 'true' : type === 'number' ? String(value).trim() : String(value);
 		if (!(await attempt(() => api.setDatabaseKey(name, key, type, typed)))) return;
 		editOpen = false;
-		load();
+		void load();
 	}
 
-	function askRemove(key, list) {
+	function askRemove(key: string, list: boolean) {
 		removing = { key, list };
 		removeOpen = true;
 	}
 
 	async function remove() {
-		if (!(await attempt(() => api.deleteDatabaseKey(name, removing.key, removing.list)))) return;
+		if (!removing) return;
+		const { key, list } = removing;
+		if (!(await attempt(() => api.deleteDatabaseKey(name, key, list)))) return;
 		removeOpen = false;
-		load();
+		void load();
 	}
 </script>
 

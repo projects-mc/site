@@ -1,11 +1,12 @@
-<script>
+<script lang="ts">
 	import { untrack } from 'svelte';
-	import { act } from '#lib/session.svelte.js';
-	import { api } from '#lib/api';
-	import { preview, toRows, fromRows, headId, headImage, HEAD_TAG, LINES, WIDTH } from '#lib/minimessage';
+	import { act } from '#lib/session.svelte.ts';
+	import { api } from '#lib/api.ts';
+	import { preview, toRows, fromRows, headId, headImage, HEAD_TAG, LINES, WIDTH, type Style } from '#lib/minimessage.ts';
+	import type { Instance } from '#lib/types.ts';
 
 	// Edits a server's description in the lobby's game picker, with a preview of how the game shows it
-	let { instance } = $props();
+	let { instance }: { instance: Instance } = $props();
 	let rows = $state('');
 	let saved = $state('');
 	let saving = $state(false);
@@ -13,10 +14,13 @@
 
 	// The editor is plain text except that each whole <head:...> tag shows as just the face, so a texture value's
 	// long base64 never fills it. The tag is kept on the face and is what's saved
-	let editor = $state();
-	let typed = null;
+	let editor: HTMLElement | undefined = $state();
+	let typed: string | null = null;
 
-	function face(tag) {
+	// A face stands for its tag (data-tag)
+	const isFace = (node: Node | null | undefined): node is HTMLElement => node instanceof HTMLElement && !!node.dataset.tag;
+
+	function face(tag: string) {
 		const chip = document.createElement('span');
 		chip.className = 'head';
 		chip.contentEditable = 'false';
@@ -30,8 +34,9 @@
 		return chip;
 	}
 
-	function render(text) {
-		const nodes = [];
+	function render(text: string) {
+		if (!editor) return;
+		const nodes: Node[] = [];
 		let at = 0;
 		for (const match of text.matchAll(HEAD_TAG)) {
 			nodes.push(document.createTextNode(text.slice(at, match.index)), face(match[0]));
@@ -44,11 +49,12 @@
 	}
 
 	// The editor's text, with faces back as their tags and line breaks however the browser made them
-	function read(node = editor) {
+	function read(node: Node | undefined = editor): string {
+		if (!node) return '';
 		let text = '';
 		for (const child of node.childNodes) {
-			if (child.nodeType === Node.TEXT_NODE) text += child.nodeValue;
-			else if (child.dataset?.tag) text += child.dataset.tag;
+			if (child.nodeType === Node.TEXT_NODE) text += child.nodeValue ?? '';
+			else if (isFace(child)) text += child.dataset.tag ?? '';
 			else if (child.nodeName === 'BR') text += '\n';
 			else {
 				if (text && !text.endsWith('\n') && /^(DIV|P)$/.test(child.nodeName)) text += '\n';
@@ -62,38 +68,40 @@
 		const text = read();
 		typed = rows = text;
 		// A head tag was just finished or pasted: turn it into its face, the cursor staying where it was
-		if ((text.match(HEAD_TAG)?.length ?? 0) !== editor.querySelectorAll('.head').length) {
+		if ((text.match(HEAD_TAG)?.length ?? 0) !== (editor?.querySelectorAll('.head').length ?? 0)) {
 			const before = text.length - caretFromEnd();
 			render(text);
 			placeCaret(before);
 		}
 	}
 
-	function replace(text, caret) {
+	function replace(text: string, caret: number) {
 		typed = rows = text;
 		render(text);
 		placeCaret(caret);
 	}
 
 	// The face next to the cursor on one side, if there is one and nothing is selected
-	function faceBeside(before) {
-		const selection = getSelection();
-		if (!selection.rangeCount || !selection.isCollapsed) return null;
-		let { startContainer: node, startOffset: offset } = selection.getRangeAt(0);
+	function faceBeside(before: boolean): HTMLElement | null {
+		const selected = getSelection();
+		if (!selected?.rangeCount || !selected.isCollapsed) return null;
+		const { startContainer: node, startOffset: offset } = selected.getRangeAt(0);
 		if (node.nodeType === Node.TEXT_NODE) {
-			if (offset !== (before ? 0 : node.nodeValue.length)) return null;
+			if (offset !== (before ? 0 : (node.nodeValue ?? '').length)) return null;
 			const next = before ? node.previousSibling : node.nextSibling;
-			return next?.dataset?.tag ? next : null;
+			return isFace(next) ? next : null;
 		}
 		const next = node.childNodes[before ? offset - 1 : offset];
-		return next?.dataset?.tag ? next : null;
+		return isFace(next) ? next : null;
 	}
 
 	// A face is its tag condensed: deleting next to it takes off the tag's last (or first) character, unfolding it
 	// back into text to edit. Enter adds a line break as text
-	function onkeydown(e) {
+	function onkeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter') {
 			e.preventDefault();
+			// The only way to insert text that the browser's undo knows about; nothing has replaced it yet
+			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			document.execCommand('insertText', false, '\n');
 			return;
 		}
@@ -106,12 +114,12 @@
 			// In the text beside it (render always leaves some, if empty), where browsers draw the cursor reliably
 			const range = document.createRange();
 			const beside = left ? chip.previousSibling : chip.nextSibling;
-			if (beside?.nodeType === Node.TEXT_NODE) range.setStart(beside, left ? beside.nodeValue.length : 0);
+			if (beside?.nodeType === Node.TEXT_NODE) range.setStart(beside, left ? (beside.nodeValue ?? '').length : 0);
 			else if (left) range.setStartBefore(chip);
 			else range.setStartAfter(chip);
 			range.collapse(true);
-			getSelection().removeAllRanges();
-			getSelection().addRange(range);
+			getSelection()?.removeAllRanges();
+			getSelection()?.addRange(range);
 			return;
 		}
 		if (e.key !== 'Backspace' && e.key !== 'Delete') return;
@@ -128,26 +136,27 @@
 	// Copying or cutting takes the faces as their whole tags
 	function selected() {
 		const selection = getSelection();
-		if (!selection.rangeCount) return '';
+		if (!selection?.rangeCount) return '';
 		const holder = document.createElement('div');
 		holder.append(selection.getRangeAt(0).cloneContents());
 		return read(holder);
 	}
-	function oncopy(e) {
+	function oncopy(e: ClipboardEvent) {
 		e.preventDefault();
-		e.clipboardData.setData('text/plain', selected());
+		e.clipboardData?.setData('text/plain', selected());
 	}
-	function oncut(e) {
+	function oncut(e: ClipboardEvent) {
 		oncopy(e);
-		getSelection().deleteFromDocument();
+		getSelection()?.deleteFromDocument();
 		oninput();
 	}
 
 	// Characters (tags counted whole) between the cursor and the end, so it can be put back after rendering
 	function caretFromEnd() {
 		const selection = getSelection();
-		if (!selection.rangeCount) return 0;
+		if (!selection?.rangeCount) return 0;
 		const range = document.createRange();
+		if (!editor) return 0;
 		range.selectNodeContents(editor);
 		range.setStart(selection.getRangeAt(0).endContainer, selection.getRangeAt(0).endOffset);
 		const after = document.createElement('div');
@@ -155,23 +164,24 @@
 		return read(after).length;
 	}
 
-	function placeCaret(offset) {
+	function placeCaret(offset: number) {
+		if (!editor) return;
 		let left = offset;
 		const range = document.createRange();
 		range.selectNodeContents(editor);
 		range.collapse(false);
 		for (const child of editor.childNodes) {
-			const length = child.nodeType === Node.TEXT_NODE ? child.nodeValue.length : child.dataset.tag.length;
+			const length = isFace(child) ? (child.dataset.tag ?? '').length : (child.nodeValue ?? '').length;
 			if (left <= length) {
-				if (child.nodeType === Node.TEXT_NODE) range.setStart(child, left);
+				if (!isFace(child)) range.setStart(child, left);
 				else range.setStartAfter(child);
 				range.collapse(true);
 				break;
 			}
 			left -= length;
 		}
-		getSelection().removeAllRanges();
-		getSelection().addRange(range);
+		getSelection()?.removeAllRanges();
+		getSelection()?.addRange(range);
 	}
 
 	// Text set from outside (another server, or saved elsewhere) is drawn again; what was just typed already is
@@ -192,7 +202,7 @@
 		});
 	});
 
-	const css = (style) =>
+	const css = (style: Style) =>
 		[
 			style.color && `color:${style.color}`,
 			// Monocraft has no bold face: the game draws bold text twice, a font pixel apart
@@ -204,7 +214,7 @@
 			.filter(Boolean)
 			.join(';');
 
-	async function save(e) {
+	async function save(e: SubmitEvent) {
 		e.preventDefault();
 		saving = true;
 		await act(() => api.setMotd(instance.name, fromRows(rows)));

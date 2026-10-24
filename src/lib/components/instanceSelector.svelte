@@ -1,22 +1,24 @@
-<script>
-	import { api } from '#lib/api';
-	import { session, currentInstance, select, act } from '#lib/session.svelte.js';
-	import { checkout } from '#lib/git';
+<script lang="ts">
+	import { api } from '#lib/api.ts';
+	import { session, currentInstance, select, act } from '#lib/session.svelte.ts';
+	import { checkout } from '#lib/git.ts';
 
 	let open = $state(false);
 	let instance = $derived(currentInstance());
 	let running = $derived(instance?.phase === 'running');
-	let memory = $derived(instance ? Math.round((instance.memory / instance.memoryMax) * 100) : 0);
+	let memory = $derived(instance?.memoryMax ? Math.round((instance.memory / instance.memoryMax) * 100) : 0);
 	// Players and memory only mean something while the server is running with someone on it;
 	// otherwise their rows are left out
-	let showStats = $derived(running && instance.players > 0);
+	let showStats = $derived(running && (instance?.players ?? 0) > 0);
 	let toggleHeight = $state(0);
-	let area;
+	let area: HTMLElement | undefined = $state();
 
 	// A click anywhere outside the selector closes its menu
-	const onWindowClick = (e) => { if (open && !area.contains(e.target)) open = false; };
+	const onWindowClick = (e: MouseEvent) => {
+		if (open && !area?.contains(e.target as Node)) open = false;
+	};
 
-	function choose(name) {
+	function choose(name: string) {
 		select(name);
 		open = false;
 	}
@@ -34,7 +36,8 @@
 	let updating = $state(false);
 	async function update() {
 		updating = true;
-		await act(() => checkout(instance.name, null));
+		const name = instance?.name;
+		if (name) await act(() => checkout(name, null));
 		updating = false;
 	}
 
@@ -54,7 +57,7 @@
 	<!-- Closed sidebar: just the numbers and a status light, in the space the full box keeps -->
 	<div class="instanceCompact pixelBox" class:statusOnly={!showStats} aria-hidden="true">
 		{#if showStats}
-			<span><img src="/media/icons/players.png" alt="">{instance.players}</span>
+			<span><img src="/media/icons/players.png" alt="">{instance?.players}</span>
 			<span><img src="/media/icons/memory.png" alt="">{memory}%</span>
 		{/if}
 		<span class="statusLight" class:running></span>
@@ -81,7 +84,7 @@
 						</span>
 					</div>
 				{/if}
-				<span class="instanceState" class:running>{instance.phase[0].toUpperCase() + instance.phase.slice(1)}</span>
+				<span class="instanceState" class:running>{instance.phase.charAt(0).toUpperCase() + instance.phase.slice(1)}</span>
 				{#if instance.gitUpdate}
 					<button class="updateButton" onclick={update} disabled={updating} title="Pull the branch's new commit{running ? ' and reload the scripts it changed' : ''}">
 						<img src="/media/icons/update.png" alt="">{updating ? 'Updating...' : 'Update'}

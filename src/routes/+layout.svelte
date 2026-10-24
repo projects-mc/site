@@ -1,14 +1,14 @@
 <!-- Wraps every page on the site, most important parent layout -->
-<script>
+<script lang="ts">
 	import Header from '#lib/components/header.svelte';
 	import Footer from '#lib/components/footer.svelte';
 	import Home from '#lib/components/home.svelte';
-	import { navItems } from '#lib/config';
-	import { session, currentInstance, refresh, restore } from '#lib/session.svelte.js';
+	import { navItems, navPages } from '#lib/config.ts';
+	import { session, currentInstance, refresh, restore } from '#lib/session.svelte.ts';
 	import { preloadCode } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { page } from '$app/state';
-	let { children } = $props();
+	let { children }: { children: Snippet } = $props();
 
 	// Pages about one instance need a login and an instance; the rest (home, login, legal) don't
 	const instancePages = navItems.map((item) => item.route);
@@ -29,12 +29,12 @@
 
 	onMount(() => {
 		// Prefetch all top-level routes for better speed
-		preloadCode(...instancePages);
+		for (const route of navPages) void preloadCode(route);
 		restore();
-		refresh();
+		void refresh();
 		// aspen pushes state, players and memory while the live connection is up; without it, poll (and reconnect).
 		// Skipped while the tab is hidden
-		const timer = setInterval(() => { if (!document.hidden && !session.live) refresh(); }, 5000);
+		const timer = setInterval(() => { if (!document.hidden && !session.live) void refresh(); }, 5000);
 		return () => clearInterval(timer);
 	});
 </script>

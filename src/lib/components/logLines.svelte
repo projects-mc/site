@@ -1,15 +1,15 @@
-<script>
-	import { parseLog } from '#lib/console';
+<script lang="ts">
+	import { parseLog } from '#lib/console.ts';
 
 	// query: text to highlight (case-insensitive), as the log viewer's find box does
-	let { log, query = '' } = $props();
+	let { log, query = '' }: { log: string; query?: string } = $props();
 	let lines = $derived(parseLog(log));
 	let needle = $derived(query.toLowerCase());
 
 	// Splits text into plain and matching parts for <mark>
-	function parts(text) {
+	function parts(text: string): { text: string; isMatch?: boolean }[] {
 		if (!needle) return [{ text }];
-		const out = [];
+		const out: { text: string; isMatch?: boolean }[] = [];
 		const lower = text.toLowerCase();
 		let at = 0;
 		for (let i = lower.indexOf(needle); i !== -1; i = lower.indexOf(needle, at)) {
@@ -26,7 +26,7 @@
 	<link rel="stylesheet" href="/css/log.css"/>
 </svelte:head>
 
-{#snippet highlighted(text)}{#each parts(text) as part, i (i)}{#if part.isMatch}<mark>{part.text}</mark>{:else}{part.text}{/if}{/each}{/snippet}
+{#snippet highlighted(text: string)}{#each parts(text) as part, i (i)}{#if part.isMatch}<mark>{part.text}</mark>{:else}{part.text}{/if}{/each}{/snippet}
 
 <div class="logLines">
 	{#each lines as line, i (i)}

@@ -1,12 +1,12 @@
-<script>
-	import { session, select } from '#lib/session.svelte.js';
-	import { api } from '#lib/api';
+<script lang="ts">
+	import { session, select } from '#lib/session.svelte.ts';
+	import { api } from '#lib/api.ts';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
-	function open(name) {
+	function open(name: string) {
 		select(name);
-		goto(resolve('/console'));
+		void goto(resolve('/console'));
 	}
 
 	async function logOut() {

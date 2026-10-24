@@ -1,33 +1,41 @@
-<script>
+<script lang="ts">
 	import HistoryList from '#lib/components/historyList.svelte';
 	import IconButton from '#lib/components/iconButton.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
 	import Modal from '#lib/components/modal.svelte';
 	import DatabaseBrowser from '#lib/components/databaseBrowser.svelte';
-	import { api } from '#lib/api';
-	import { onDatabaseBackupsChanged } from '#lib/session.svelte.js';
-	import { isoFromUnix, formatBytes } from '#lib/format';
+	import { api } from '#lib/api.ts';
+	import { onDatabaseBackupsChanged } from '#lib/session.svelte.ts';
+	import { isoFromUnix, formatBytes } from '#lib/format.ts';
 
 	// One database's backups: made every 2 days when it changed, or by hand; the newest 5 are kept. Each can be looked
 	// at, downloaded, restored (servers keep running) or deleted
-	let { name } = $props();
-	const kinds = { auto: 'Automatic backup', manual: 'Manual backup', restore: 'Before a restore' };
+	let { name }: { name: string } = $props();
+	// (By any name aspen sends, in case it learns a new kind)
+	const kinds: Record<string, string> = { auto: 'Automatic backup', manual: 'Manual backup', restore: 'Before a restore' };
 
-	let backups = $state([]);
+	interface Row {
+		id: string;
+		name: string;
+		time: string;
+		size: string;
+	}
+
+	let backups: Row[] = $state([]);
 	let busy = $state(false);
 	let error = $state('');
-	let viewing = $state(null);
+	let viewing: Row | null = $state(null);
 	let viewOpen = $state(false);
-	let restoring = $state(null);
+	let restoring: Row | null = $state(null);
 	let restoreOpen = $state(false);
-	let removing = $state(null);
+	let removing: Row | null = $state(null);
 	let removeOpen = $state(false);
 
-	$effect(() => { load(name); });
+	$effect(() => { void load(name); });
 	// Made elsewhere (the automatic ones, another tab), or after reconnecting
-	$effect(() => onDatabaseBackupsChanged((changed) => { if (changed === null || changed === name) load(name); }));
+	$effect(() => onDatabaseBackupsChanged((changed) => { if (changed === null || changed === name) void load(name); }));
 
-	async function load(database) {
+	async function load(database: string) {
 		const list = await api.databaseBackups(database).catch(() => null);
 		if (database !== name || !list) return;
 		backups = list.map((backup) => ({
@@ -38,29 +46,29 @@
 		}));
 	}
 
-	async function change(action) {
+	async function change(action: () => Promise<unknown>) {
 		busy = true;
 		error = '';
 		try {
 			await action();
 		} catch (e) {
-			error = e.message;
+			error = e instanceof Error ? e.message : String(e);
 		}
 		await load(name);
 		busy = false;
 	}
 
-	const when = (backup) => new Date(backup.time).toLocaleString();
+	const when = (backup: Row) => new Date(backup.time).toLocaleString();
 </script>
 
 <HistoryList title="Database {name}" items={backups} emptyText="No backups yet.">
 	{#snippet headerAction()}
 		<button disabled={busy} onclick={() => change(() => api.backUpDatabase(name))}>Back up now</button>
 	{/snippet}
-	{#snippet label(backup)}
+	{#snippet label(backup: Row)}
 		<TimeTip iso={backup.time}>{backup.name}</TimeTip>
 	{/snippet}
-	{#snippet rowActions(backup)}
+	{#snippet rowActions(backup: Row)}
 		<button onclick={() => { viewing = backup; viewOpen = true; }}>View</button>
 		<IconButton icon="download" label="Download" onclick={() => location.assign(api.databaseBackupLink(name, backup.id))}/>
 		<IconButton icon="restore" label="Restore" onclick={() => { restoring = backup; restoreOpen = true; }}/>
@@ -78,10 +86,11 @@
 
 <Modal bind:open={restoreOpen} title="Restore {name}?">
 	{#if restoring}
+		{@const id = restoring.id}
 		<p>Puts back what {name} held on {when(restoring)}. Your servers keep running and use it straight away. What it
 			holds now is kept as a backup first, so you can undo this.</p>
 		<p>
-			<button disabled={busy} onclick={() => { restoreOpen = false; change(() => api.restoreDatabase(name, restoring.id)); }}>Restore</button>
+			<button disabled={busy} onclick={() => { restoreOpen = false; void change(() => api.restoreDatabase(name, id)); }}>Restore</button>
 			<button onclick={() => (restoreOpen = false)}>Cancel</button>
 		</p>
 	{/if}
@@ -89,9 +98,10 @@
 
 <Modal bind:open={removeOpen} title="Delete this backup?">
 	{#if removing}
+		{@const id = removing.id}
 		<p>The {removing.name.toLowerCase()} of {name} from {when(removing)}.</p>
 		<p>
-			<button onclick={() => { removeOpen = false; change(() => api.deleteDatabaseBackup(name, removing.id)); }}>Delete</button>
+			<button onclick={() => { removeOpen = false; void change(() => api.deleteDatabaseBackup(name, id)); }}>Delete</button>
 			<button onclick={() => (removeOpen = false)}>Cancel</button>
 		</p>
 	{/if}

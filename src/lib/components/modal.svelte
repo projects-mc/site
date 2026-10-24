@@ -1,8 +1,10 @@
-<script>
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	// A dialog over the page (the browser's <dialog>: focus stays inside, Escape closes it), centred, as a pixel box
 	// like the log viewer. Open while `open` is true; closing it any way sets `open` back to false
-	let { open = $bindable(false), title, children } = $props();
-	let dialog;
+	let { open = $bindable(false), title, children }: { open?: boolean; title: string; children: Snippet } = $props();
+	let dialog: HTMLDialogElement;
 
 	$effect(() => {
 		if (open && !dialog.open) dialog.showModal();

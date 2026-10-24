@@ -1,15 +1,16 @@
-<script>
+<script lang="ts">
 	import Title from '#lib/components/title.svelte';
-	import { currentInstance } from '#lib/session.svelte.js';
-	import { api } from '#lib/api';
-	import { checkout } from '#lib/git';
-	import { ago } from '#lib/format';
+	import { currentInstance } from '#lib/session.svelte.ts';
+	import { api } from '#lib/api.ts';
+	import { checkout } from '#lib/git.ts';
+	import { ago } from '#lib/format.ts';
+	import type { GitSettings, GitState } from '#lib/types.ts';
 
 	// The server's files can follow a branch of a git repository; aspen keeps the settings and does the git work
-	let name = $derived(currentInstance()?.name);
+	let name = $derived(currentInstance()?.name ?? '');
 	let running = $derived(currentInstance()?.phase === 'running');
-	let repo = $state(null);
-	let settings = $state({ url: '', branch: 'main', autoReload: false, pullOnStart: false });
+	let repo: GitState | null = $state(null);
+	let settings: GitSettings = $state({ url: '', branch: 'main', autoReload: false, pullOnStart: false });
 	let commit = $state('');
 	let busy = $state('');
 	let error = $state('');
@@ -18,46 +19,55 @@
 		const loading = name;
 		repo = null;
 		error = '';
-		api.git(loading).then(show, (e) => { if (loading === name) error = e.message; });
+		if (!loading) return;
+		// Fetching takes a moment: only for the server still selected
+		api.git(loading).then(
+			(reply) => {
+				if (loading === name) show(reply);
+			},
+			(e: unknown) => {
+				if (loading === name) error = e instanceof Error ? e.message : String(e);
+			}
+		);
 	});
 
-	function show(reply) {
+	function show(reply: GitState) {
 		repo = reply;
 		settings = { url: reply.url, branch: reply.branch, autoReload: reply.autoReload, pullOnStart: reply.pullOnStart };
 		commit = reply.head?.hash ?? reply.latest?.hash ?? '';
 	}
 
-	async function run(what, action) {
+	async function run(what: string, action: () => Promise<GitState | null>) {
 		busy = what;
 		error = '';
 		try {
 			const reply = await action();
 			if (reply) show(reply);
 		} catch (e) {
-			error = e.message;
+			error = e instanceof Error ? e.message : String(e);
 		}
 		busy = '';
 	}
 
-	function save(e) {
+	function save(e: SubmitEvent) {
 		e.preventDefault();
-		run('save', () => api.gitSettings(name, { ...settings, url: settings.url.trim(), branch: settings.branch.trim() }));
+		void run('save', () => api.gitSettings(name, { ...settings, url: settings.url.trim(), branch: settings.branch.trim() }));
 	}
 
 	function remove() {
 		if (confirm('Stop following this repository? The files stay as they are.'))
-			run('save', () => api.gitSettings(name, { url: '', branch: '' }));
+			void run('save', () => api.gitSettings(name, { url: '', branch: '' }));
 	}
 
 	function rollBack() {
-		const notes = [];
-		if (repo.autoReload) notes.push('Auto-update is on: the server stays on this commit until a new commit is pushed, then updates to that.');
-		if (repo.pullOnStart) notes.push('Update on start is on: the next time the server starts, it goes back to the latest commit.');
+		const notes: string[] = [];
+		if (repo?.autoReload) notes.push('Auto-update is on: the server stays on this commit until a new commit is pushed, then updates to that.');
+		if (repo?.pullOnStart) notes.push('Update on start is on: the next time the server starts, it goes back to the latest commit.');
 		if (notes.length && !confirm(`${notes.join('\n\n')}\n\nRoll back anyway?`)) return;
-		run('rollback', () => checkout(name, commit));
+		void run('rollback', () => checkout(name, commit));
 	}
 
-	const short = (hash) => hash.slice(0, 7);
+	const short = (hash: string) => hash.slice(0, 7);
 </script>
 
 <Title name="Development"/>
@@ -73,7 +83,7 @@
 		<p>Couldn't reach the repository: {repo.error}</p>
 	{:else}
 		<p>On {#if repo.head}<code>{short(repo.head.hash)}</code> {repo.head.message}{:else}no commit yet{/if}.</p>
-		{#if repo.updateAvailable}
+		{#if repo.updateAvailable && repo.latest}
 			<p>New: <code>{short(repo.latest.hash)}</code> {repo.latest.message}
 				<button onclick={() => run('update', () => checkout(name, null))} disabled={!!busy}>
 					{busy === 'update' ? 'Updating...' : running ? 'Update and reload' : 'Update'}

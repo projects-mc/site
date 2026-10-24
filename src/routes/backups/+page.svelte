@@ -1,30 +1,43 @@
-<script>
+<script lang="ts">
 	import InstanceHeader from '#lib/components/instanceHeader.svelte';
 	import HistoryList from '#lib/components/historyList.svelte';
 	import IconButton from '#lib/components/iconButton.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
 	import DatabaseBackups from '#lib/components/databaseBackups.svelte';
-	import { currentInstance, act, onBackupsChanged, onDatabasesChanged } from '#lib/session.svelte.js';
-	import { api } from '#lib/api';
-	import { isoFromUnix, formatBytes } from '#lib/format';
+	import { currentInstance, act, onBackupsChanged, onDatabasesChanged } from '#lib/session.svelte.ts';
+	import { api } from '#lib/api.ts';
+	import { isoFromUnix, formatBytes } from '#lib/format.ts';
+	import type { DatabaseInfo } from '#lib/types.ts';
 
-	let name = $derived(currentInstance()?.name);
+	let name = $derived(currentInstance()?.name ?? '');
 	let stopped = $derived(currentInstance()?.phase === 'stopped');
 	// A server following a git branch has its history there: no new backups, the last ones expire after a week
 	let followsGit = $derived(currentInstance()?.git);
-	let backups = $state([]);
+	interface Row {
+		id: string;
+		name: string;
+		time: string;
+		size: string;
+	}
+	let backups: Row[] = $state([]);
 	let busy = $state(false);
 	// The player's databases, each with its own backups below the server's
-	let databases = $state([]);
+	let databases: DatabaseInfo[] = $state([]);
 	const loadDatabases = async () => { databases = (await api.databases().catch(() => null))?.databases ?? databases; };
-	$effect(() => { loadDatabases(); });
-	$effect(() => onDatabasesChanged((changed) => { if (changed === null) loadDatabases(); }));
+	$effect(() => { void loadDatabases(); });
+	$effect(() => onDatabasesChanged((changed) => { if (changed === null) void loadDatabases(); }));
 
-	$effect(() => { load(name); });
+	$effect(() => {
+		if (name) void load(name);
+	});
 	// A backup made elsewhere (the automatic one when the server stops, another tab) shows up straight away
-	$effect(() => onBackupsChanged((instance) => { if (instance === name) load(name); }));
+	$effect(() =>
+		onBackupsChanged((instance) => {
+			if (instance === name) void load(instance);
+		})
+	);
 
-	async function load(instance) {
+	async function load(instance: string) {
 		const list = await api.backups(instance).catch(() => []);
 		if (instance !== name) return;
 		backups = list.map((backup) => ({
@@ -36,21 +49,23 @@
 	}
 
 	// Runs an action that changes the backups, then shows the new list
-	async function change(action) {
+	async function change(action: () => Promise<unknown>) {
 		busy = true;
 		await act(action);
-		await load(name);
+		if (name) await load(name);
 		busy = false;
 	}
 
-	function restore(backup) {
+	function restore(backup: Row) {
+		if (!name) return;
 		if (!stopped) return alert('Stop the server before restoring a backup.');
 		if (confirm(`Replace ${name}'s files with the ${backup.name.toLowerCase()} from ${new Date(backup.time).toLocaleString()}?`))
-			change(() => api.restore(name, backup.id));
+			void change(() => api.restore(name, backup.id));
 	}
 
-	function remove(backup) {
-		if (confirm(`Delete this ${backup.name.toLowerCase()}?`)) change(() => api.deleteBackup(name, backup.id));
+	function remove(backup: Row) {
+		if (!name) return;
+		if (confirm(`Delete this ${backup.name.toLowerCase()}?`)) void change(() => api.deleteBackup(name, backup.id));
 	}
 </script>
 
@@ -69,10 +84,10 @@
 		{/if}
 		<button onclick={() => location.assign(api.downloadLink(name))}>Download current files</button>
 	{/snippet}
-	{#snippet label(backup)}
+	{#snippet label(backup: Row)}
 		<TimeTip iso={backup.time}>{backup.name}</TimeTip>
 	{/snippet}
-	{#snippet rowActions(backup)}
+	{#snippet rowActions(backup: Row)}
 		<IconButton icon="download" label="Download" onclick={() => location.assign(api.backupLink(name, backup.id))}/>
 		<IconButton icon="restore" label="Restore" onclick={() => restore(backup)}/>
 		<button onclick={() => remove(backup)} aria-label="Delete">&times;</button>
