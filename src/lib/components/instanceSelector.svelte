@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { api } from '#lib/api.ts';
-	import { session, currentInstance, select, act } from '#lib/session.svelte.ts';
+	import { session, currentInstance, select, act, can } from '#lib/session.svelte.ts';
 	import { checkout } from '#lib/git.ts';
 
 	let open = $state(false);
@@ -27,7 +27,7 @@
 	// sets gitUpdate in the instance list
 	let checked = '';
 	$effect(() => {
-		if (instance?.git && instance.name !== checked) {
+		if (instance?.git && instance.name !== checked && can('git')) {
 			checked = instance.name;
 			api.git(instance.name).catch(() => {});
 		}
@@ -85,7 +85,7 @@
 					</div>
 				{/if}
 				<span class="instanceState" class:running>{instance.phase.charAt(0).toUpperCase() + instance.phase.slice(1)}</span>
-				{#if instance.gitUpdate}
+				{#if instance.gitUpdate && can('git.update')}
 					<button class="updateButton" onclick={update} disabled={updating} title="Pull the branch's new commit{running ? ' and reload the scripts it changed' : ''}">
 						<img src="/media/icons/update.png" alt="">{updating ? 'Updating...' : 'Update'}
 					</button>

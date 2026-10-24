@@ -4,7 +4,7 @@
 	import IconButton from '#lib/components/iconButton.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
 	import DatabaseBackups from '#lib/components/databaseBackups.svelte';
-	import { currentInstance, act, onBackupsChanged, onDatabasesChanged } from '#lib/session.svelte.ts';
+	import { currentInstance, act, can, onBackupsChanged, onDatabasesChanged } from '#lib/session.svelte.ts';
 	import { api } from '#lib/api.ts';
 	import { isoFromUnix, formatBytes } from '#lib/format.ts';
 	import type { DatabaseInfo } from '#lib/types.ts';
@@ -13,6 +13,7 @@
 	let stopped = $derived(currentInstance()?.phase === 'stopped');
 	// A server following a git branch has its history there: no new backups, the last ones expire after a week
 	let followsGit = $derived(currentInstance()?.git);
+	let maySee = $derived(can('backups'));
 	interface Row {
 		id: string;
 		name: string;
@@ -28,7 +29,7 @@
 	$effect(() => onDatabasesChanged((changed) => { if (changed === null) void loadDatabases(); }));
 
 	$effect(() => {
-		if (name) void load(name);
+		if (name && maySee) void load(name);
 	});
 	// A backup made elsewhere (the automatic one when the server stops, another tab) shows up straight away
 	$effect(() =>
@@ -77,22 +78,37 @@
 {:else}
 	<p>A backup is made automatically every time the server stops, and kept for 7 days.</p>
 {/if}
-<HistoryList title="Backups" items={backups} emptyText="No backups yet.">
-	{#snippet headerAction()}
-		{#if !followsGit}
-			<button disabled={busy} onclick={() => change(() => api.backUp(name))}>Back up now</button>
-		{/if}
-		<button onclick={() => location.assign(api.downloadLink(name))}>Download current files</button>
-	{/snippet}
-	{#snippet label(backup: Row)}
-		<TimeTip iso={backup.time}>{backup.name}</TimeTip>
-	{/snippet}
-	{#snippet rowActions(backup: Row)}
-		<IconButton icon="download" label="Download" onclick={() => location.assign(api.backupLink(name, backup.id))}/>
-		<IconButton icon="restore" label="Restore" onclick={() => restore(backup)}/>
-		<button onclick={() => remove(backup)} aria-label="Delete">&times;</button>
-	{/snippet}
-</HistoryList>
+{#if maySee}
+	<HistoryList title="Backups" items={backups} emptyText="No backups yet.">
+		{#snippet headerAction()}
+			{#if !followsGit && can('backups.create')}
+				<button disabled={busy} onclick={() => change(() => api.backUp(name))}>Back up now</button>
+			{/if}
+			{#if can('files.download')}
+				<button onclick={() => location.assign(api.downloadLink(name))}>Download current files</button>
+			{/if}
+		{/snippet}
+		{#snippet label(backup: Row)}
+			<TimeTip iso={backup.time}>{backup.name}</TimeTip>
+		{/snippet}
+		{#snippet rowActions(backup: Row)}
+			{#if can('backups.download')}
+				<IconButton icon="download" label="Download" onclick={() => location.assign(api.backupLink(name, backup.id))}/>
+			{/if}
+			{#if can('backups.restore')}
+				<IconButton icon="restore" label="Restore" onclick={() => restore(backup)}/>
+			{/if}
+			{#if can('backups.delete')}
+				<button onclick={() => remove(backup)} aria-label="Delete">&times;</button>
+			{/if}
+		{/snippet}
+	</HistoryList>
+{:else}
+	<p>The owner hasn't let you see this server's backups.</p>
+	{#if can('files.download')}
+		<p><button onclick={() => location.assign(api.downloadLink(name))}>Download current files</button></p>
+	{/if}
+{/if}
 
 {#if databases.length}
 	<h2>Databases</h2>

@@ -1,4 +1,5 @@
 import { api, token, ApiError } from '#lib/api.ts';
+import { allows, type Permission } from '#lib/permissions.ts';
 import type { EventMessage, Instance, User } from '#lib/types.ts';
 
 interface Session {
@@ -15,6 +16,9 @@ export const session: Session = $state({ user: null, instances: [], selected: ''
 
 export const currentInstance = (): Instance | undefined =>
 	session.instances.find((instance) => instance.name === session.selected) ?? session.instances[0];
+
+// Whether the player may do this on the selected instance
+export const can = (permission: Permission): boolean => allows(currentInstance(), session.user, permission);
 
 // The last known user and instances, so a returning visitor's pages draw straight away instead of waiting on the API
 const CACHE_KEY = 'sessionCache';

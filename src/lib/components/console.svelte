@@ -5,17 +5,20 @@
 	import { readStored } from '#lib/session.svelte.ts';
 
 	// running: the server is up, so the prompt is / (a command) rather than >
+	// mayRun: the player may run commands (a member the owner didn't let can only watch)
 	// oncommand: called with each command typed
 	// trimmed: older lines were dropped; scrolling to the top offers onopenlog, which opens the full log
 	let {
 		log,
 		running,
+		mayRun = true,
 		oncommand,
 		trimmed = false,
 		onopenlog
 	}: {
 		log: string;
 		running: boolean;
+		mayRun?: boolean;
 		oncommand: (command: string) => void;
 		trimmed?: boolean;
 		onopenlog?: () => void;
@@ -56,7 +59,7 @@
 	function submit(e: SubmitEvent) {
 		e.preventDefault();
 		const command = input.value.trim().replace(/^\//, '');
-		if (!command || !running) return;
+		if (!command || !running || !mayRun) return;
 		oncommand(command);
 		if (history.at(-1) !== command) history = [...history, command].slice(-HISTORY_SIZE);
 		localStorage.setItem('consoleHistory', JSON.stringify(history));
@@ -107,8 +110,8 @@
 			<input
 				type="text"
 				aria-label="Server command"
-				placeholder={running ? '' : 'Start the server to run commands'}
-				disabled={!running}
+				placeholder={!mayRun ? "The owner hasn't let you run commands" : running ? '' : 'Start the server to run commands'}
+				disabled={!running || !mayRun}
 				spellcheck="false"
 				autocomplete="off"
 				bind:this={input}

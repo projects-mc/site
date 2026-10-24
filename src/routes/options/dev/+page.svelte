@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Title from '#lib/components/title.svelte';
-	import { currentInstance } from '#lib/session.svelte.ts';
+	import { currentInstance, can } from '#lib/session.svelte.ts';
 	import { api } from '#lib/api.ts';
 	import { checkout } from '#lib/git.ts';
 	import { ago } from '#lib/format.ts';
@@ -9,6 +9,7 @@
 	// The server's files can follow a branch of a git repository; aspen keeps the settings and does the git work
 	let name = $derived(currentInstance()?.name ?? '');
 	let running = $derived(currentInstance()?.phase === 'running');
+	let maySee = $derived(can('git'));
 	let repo: GitState | null = $state(null);
 	let settings: GitSettings = $state({ url: '', branch: 'main', autoReload: false, pullOnStart: false });
 	let commit = $state('');
@@ -19,7 +20,7 @@
 		const loading = name;
 		repo = null;
 		error = '';
-		if (!loading) return;
+		if (!loading || !maySee) return;
 		// Fetching takes a moment: only for the server still selected
 		api.git(loading).then(
 			(reply) => {
@@ -75,15 +76,16 @@
 <p>Puts this server's files on a branch of a git repository: update when it has new commits, or roll back to an earlier
 	one. If the server is running, the scripts that changed (and those that depend on them) are reloaded. Files the
 	repository doesn't have are left alone.</p>
+{#if !maySee}<p>The owner hasn't let you see this server's git settings.</p>{/if}
 {#if error}<p>{error}</p>{/if}
 {#if repo?.warning}<p>{repo.warning}</p>{/if}
 
-{#if repo?.url}
+{#if maySee && repo?.url}
 	{#if repo.error}
 		<p>Couldn't reach the repository: {repo.error}</p>
 	{:else}
 		<p>On {#if repo.head}<code>{short(repo.head.hash)}</code> {repo.head.message}{:else}no commit yet{/if}.</p>
-		{#if repo.updateAvailable && repo.latest}
+		{#if repo.updateAvailable && repo.latest && can('git.update')}
 			<p>New: <code>{short(repo.latest.hash)}</code> {repo.latest.message}
 				<button onclick={() => run('update', () => checkout(name, null))} disabled={!!busy}>
 					{busy === 'update' ? 'Updating...' : running ? 'Update and reload' : 'Update'}
@@ -92,7 +94,7 @@
 		{#if repo.dirty?.length}
 			<p>Changed on this server since (updating overwrites them): {repo.dirty.join(', ')}</p>
 		{/if}
-		{#if repo.commits.length}
+		{#if repo.commits.length && can('git.update')}
 			<h3>Roll back</h3>
 			<p>
 				<select bind:value={commit}>
@@ -115,6 +117,7 @@
 	{/if}
 {/if}
 
+{#if can('git.settings')}
 <h3>Settings</h3>
 <form onsubmit={save}>
 	<label>Repository <input type="text" bind:value={settings.url} placeholder="https://github.com/you/your-server.git" required size="50"></label>
@@ -128,3 +131,4 @@
 	<button disabled={!!busy}>{busy === 'save' ? 'Saving...' : 'Save'}</button>
 	{#if repo?.url}<button type="button" onclick={remove} disabled={!!busy}>Remove</button>{/if}
 </form>
+{/if}

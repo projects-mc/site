@@ -4,7 +4,7 @@
 	import HistoryList from '#lib/components/historyList.svelte';
 	import TimeTip from '#lib/components/timeTip.svelte';
 	import LogViewer from '#lib/components/logViewer.svelte';
-	import { currentInstance, act } from '#lib/session.svelte.ts';
+	import { currentInstance, act, can } from '#lib/session.svelte.ts';
 	import { api } from '#lib/api.ts';
 	import { formatRange, isoFromUnix, ago, formatBytes } from '#lib/format.ts';
 
@@ -16,6 +16,8 @@
 	let phase = $derived(currentInstance()?.phase ?? 'stopped');
 	let running = $derived(phase === 'running');
 	let live = $derived(phase !== 'stopped'); // aspen has the server's process, and so a console
+	// (Booleans, so the effect below doesn't re-run on every refresh of the list)
+	let mayWatch = $derived(can('console'));
 	let lines: string[] = $state([]);
 	let trimmed = $state(false); // older lines were dropped, so the console points to the full log
 	interface LogRow {
@@ -35,7 +37,7 @@
 	// whether it's up changes, not on every refresh
 	$effect(() => {
 		const instance = name;
-		if (!instance) return;
+		if (!instance || !mayWatch) return;
 		lines = [];
 		trimmed = false;
 		void loadLogs(instance);
@@ -118,7 +120,9 @@
 
 <InstanceHeader page="Console"/>
 <p class="historyHeaderActions">
-	{#if phase === 'stopped'}
+	{#if !can('power')}
+		<span>{phase.charAt(0).toUpperCase() + phase.slice(1)}</span>
+	{:else if phase === 'stopped'}
 		<button onclick={start}>Start</button>
 	{:else}
 		<button onclick={() => act(() => api.stop(name), true)} disabled={phase !== 'running'}>Stop</button>
@@ -126,16 +130,22 @@
 		{#if phase !== 'running'}<span>{phase.charAt(0).toUpperCase() + phase.slice(1)}...</span>{/if}
 	{/if}
 </p>
-<Console
-	log={lines.join('\n')}
-	{running}
-	{trimmed}
-	oncommand={(command: string) => socket?.send(command)}
-	onopenlog={() => {
-		if (logs[0]) void view(logs[0], running ? 'Latest' : 'Last');
-	}}
-/>
+{#if mayWatch}
+	<Console
+		log={lines.join('\n')}
+		{running}
+		mayRun={can('console.send')}
+		{trimmed}
+		oncommand={(command: string) => socket?.send(command)}
+		onopenlog={() => {
+			if (logs[0]) void view(logs[0], running ? 'Latest' : 'Last');
+		}}
+	/>
+{:else}
+	<p>The owner hasn't let you see the console.</p>
+{/if}
 
+{#if can('logs')}
 <HistoryList title="Logs" items={logs} emptyText="No logs yet.">
 	{#snippet label(entry: LogRow, isNewest: boolean)}
 		{isNewest ? (running ? 'Latest' : 'Last') : entry.age}
@@ -148,5 +158,6 @@
 		<button onclick={() => view(entry, running ? 'Latest' : 'Last')}>View</button>
 	{/snippet}
 </HistoryList>
+{/if}
 
 <LogViewer bind:this={viewer}/>

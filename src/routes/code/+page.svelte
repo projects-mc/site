@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { beforeNavigate } from '$app/navigation';
-	import { currentInstance } from '#lib/session.svelte.ts';
+	import { currentInstance, can } from '#lib/session.svelte.ts';
 	import { api } from '#lib/api.ts';
 	import type { FileEntry } from '#lib/types.ts';
 	import type * as Monaco from 'monaco-editor';
@@ -12,6 +12,8 @@
 	const BINARY_FILE = /\.(jar|zip|gz|tar|png|jpg|jpeg|gif|webp|ogg|mp3|wav|mca|mcr|dat|dat_old|db|sqlite|class|nbt|schem|schematic)$/i;
 
 	let name = $derived(currentInstance()?.name ?? '');
+	let mayRead = $derived(can('files'));
+	let mayWrite = $derived(can('files.write')); // otherwise the editor is read-only
 	let folders: Record<string, FileEntry[]> = $state({}); // folder path -> its entries, once loaded ('' is the top)
 	let expanded: Record<string, boolean> = $state({}); // folder path -> shown open in the tree
 	let tabs: { path: string; isDirty: boolean }[] = $state([]);
@@ -52,7 +54,8 @@
 				detectIndentation: true,
 				renderWhitespace: 'boundary',
 				scrollBeyondLastLine: false,
-				model: null
+				model: null,
+				readOnly: !mayWrite
 			});
 			editor.addCommand(loaded.KeyMod.CtrlCmd | loaded.KeyCode.KeyS, () => void save());
 			if (activePath) show(activePath);
@@ -67,7 +70,7 @@
 	// A different instance starts over: nothing open, the top folder listed
 	$effect(() => {
 		const instance = name;
-		if (!instance) return;
+		if (!instance || !mayRead) return;
 		disposeModels();
 		tabs = [];
 		activePath = '';
@@ -153,7 +156,13 @@
 		}
 	}
 
+	$effect(() => {
+		const readOnly = !mayWrite;
+		editor?.updateOptions({ readOnly });
+	});
+
 	async function save() {
+		if (!mayWrite) return;
 		const path = activePath;
 		const open = models.get(path);
 		if (!open) return;
@@ -257,8 +266,10 @@
 					<span class="codeTwisty" aria-hidden="true">{entry.dir ? (expanded[path] ? 'v' : '>') : ''}</span>
 					{entry.name}
 				</button>
-				<button class="codeRowAction" onclick={() => rename(path)} title="Rename" aria-label="Rename {entry.name}">R</button>
-				<button class="codeRowAction" onclick={() => remove(path, entry)} title="Delete" aria-label="Delete {entry.name}">&times;</button>
+				{#if mayWrite}
+					<button class="codeRowAction" onclick={() => rename(path)} title="Rename" aria-label="Rename {entry.name}">R</button>
+					<button class="codeRowAction" onclick={() => remove(path, entry)} title="Delete" aria-label="Delete {entry.name}">&times;</button>
+				{/if}
 			</div>
 			{#if entry.dir && expanded[path]}
 				<ul>{@render tree(path, depth + 1)}</ul>
@@ -267,12 +278,18 @@
 	{/each}
 {/snippet}
 
-<div class="codeWorkbench pixelBox">
+{#if !mayRead}
+	<p>The owner hasn't let you see this server's files.</p>
+{/if}
+<!-- Hidden rather than left out: Monaco is mounted into it once -->
+<div class="codeWorkbench pixelBox" hidden={!mayRead}>
 	<aside class="codeExplorer">
 		<header class="codeExplorerHeader">
 			<span class="codeTitle">{name}</span>
-			<button class="codeRowAction" onclick={newFile} title="New file" aria-label="New file">+F</button>
-			<button class="codeRowAction" onclick={newFolder} title="New folder" aria-label="New folder">+D</button>
+			{#if mayWrite}
+				<button class="codeRowAction" onclick={newFile} title="New file" aria-label="New file">+F</button>
+				<button class="codeRowAction" onclick={newFolder} title="New folder" aria-label="New folder">+D</button>
+			{/if}
 			<button class="codeRowAction" onclick={refresh} title="Refresh" aria-label="Refresh">&#8635;</button>
 		</header>
 		<ul class="codeTree">{@render tree('', 0)}</ul>

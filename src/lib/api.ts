@@ -15,6 +15,7 @@ import type {
 	LogInfo,
 	User
 } from '#lib/types.ts';
+import type { Permission } from '#lib/permissions.ts';
 
 const base = (import.meta.env.VITE_API_URL ?? 'https://api.playboardmc.com').replace(/\/$/, '') + '/api';
 const TOKEN_KEY = 'session';
@@ -92,6 +93,9 @@ export const api = {
 	// player: a Minecraft UUID, or the name of a player who has used the dashboard
 	addMember: (name: string, player: string) => json<Instance>('POST', `${at(name)}/members`, { json: { player } }),
 	removeMember: (name: string, id: string) => json('DELETE', `${at(name)}/members/${encodeURIComponent(id)}`),
+	// Replaces what a member may do
+	setMemberPermissions: (name: string, id: string, permissions: Permission[]) =>
+		json<Instance>('PUT', `${at(name)}/members/${encodeURIComponent(id)}`, { json: { permissions } }),
 	// The description in the lobby's game picker (motd in its settings), MiniMessage with <br> between lines
 	setMotd: (name: string, motd: string) => json<Instance>('PUT', `${at(name)}/motd`, { json: { motd } }),
 	// The server's settings file (settings.toml), downloaded and uploaded whole; read when the server next starts

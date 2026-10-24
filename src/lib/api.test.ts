@@ -27,6 +27,14 @@ describe('api', () => {
 		expect(call(fetchMock, 1).method).toBe('DELETE');
 	});
 
+	it("sets a member's permissions", async () => {
+		fetchMock.mockResolvedValueOnce(reply(200, { name: 'game' }));
+		await api.setMemberPermissions('game', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', ['power', 'files']);
+		expect(call(fetchMock, 0).url).toMatch(/\/api\/instances\/game\/members\/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa$/);
+		expect(call(fetchMock, 0).method).toBe('PUT');
+		expect(JSON.parse(call(fetchMock, 0).body ?? '')).toEqual({ permissions: ['power', 'files'] });
+	});
+
 	it('returns null for 204 No Content', async () => {
 		fetchMock.mockResolvedValue(reply(204));
 		expect(await api.stop('game')).toBeNull();

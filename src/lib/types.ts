@@ -1,4 +1,5 @@
 // What aspen's API answers with (aspen/src/api.rs, git.rs, database.rs; documented in docs/architecture.md)
+import type { Permission } from '#lib/permissions.ts';
 
 export type Phase = 'starting' | 'running' | 'stopping' | 'stopped';
 
@@ -6,6 +7,10 @@ export interface Player {
 	id: string;
 	// '' if aspen has never seen their name
 	name: string;
+}
+
+export interface Member extends Player {
+	permissions: Permission[];
 }
 
 export interface User {
@@ -18,7 +23,7 @@ export interface User {
 export interface Instance {
 	name: string;
 	owner: Player | null;
-	members: Player[];
+	members: Member[];
 	phase: Phase;
 	running: boolean;
 	players: number;
